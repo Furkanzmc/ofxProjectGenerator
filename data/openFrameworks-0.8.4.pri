@@ -1,5 +1,5 @@
 #openFrameworks path.
-OF = $$PWD/../
+OF = #OF_PATH#
 win32:CONFIG(release, debug|release): {
     QMAKE_LFLAGS += /NODEFAULTLIB:PocoFoundationmd.lib
     QMAKE_LFLAGS += /NODEFAULTLIB:LIBCMT
@@ -323,3 +323,4 @@ HEADERS += $$OF/libs/openFrameworks/video/ofVideoPlayer.h
 
 HEADERS += $$OF/libs/openFrameworks/ofMain.h
 
+#addons
