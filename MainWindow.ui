@@ -102,6 +102,12 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="toolTip">
+         <string>Coming soon...</string>
+        </property>
         <property name="text">
          <string>Copy selected addons to project folder</string>
         </property>

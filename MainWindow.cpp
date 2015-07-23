@@ -17,10 +17,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     connect(ui->lineEditOfPath, SIGNAL(textChanged(QString)), this, SLOT(getAddonNames()));
     connect(ui->lineEditAppName, SIGNAL(textChanged(QString)), this, SLOT(checkAppNameValidity(QString)));
+    connect(ui->listWidget, SIGNAL(itemClicked(QListWidgetItem *)), this, SLOT(getSelectedAddons(QListWidgetItem *)));
     connect(ui->buttonOfPath, SIGNAL(pressed()), this, SLOT(browseOFPath()));
     connect(ui->buttonAppPath, SIGNAL(pressed()), this, SLOT(browseAppPath()));
     connect(ui->buttonGenerate, SIGNAL(pressed()), this, SLOT(generateProject()));
-    connect(ui->listWidget, SIGNAL(itemClicked(QListWidgetItem *)), this, SLOT(getSelectedAddons(QListWidgetItem *)));
 }
 
 MainWindow::~MainWindow()
@@ -115,7 +115,8 @@ void MainWindow::generateProject()
     if (priFile.exists() && priFile.open(QIODevice::ReadOnly)) {
         QString contents = QString(priFile.readAll());
         //Insert OF path
-        contents.replace("#OF_PATH#", m_OFPath);
+        QString ofPathWithoutSuffix = m_OFPath;
+        contents.replace("#OF_PATH#", ofPathWithoutSuffix.remove(ofPathWithoutSuffix.length() - 1, 1));
         insertAddons(contents);
 
         //Write the changed pri file to the new path
@@ -127,6 +128,12 @@ void MainWindow::generateProject()
 
     }
     priFile.close();
+    ui->statusBar->showMessage("Project generated", 5000);
+    ui->lineEditAppName->clear();
+    for (int i = 0;i < m_AddonItems.size();i++) {
+        QListWidgetItem *item = m_AddonItems.at(i);
+        item->setCheckState(Qt::Unchecked);
+    }
 }
 
 void MainWindow::insertAddons(QString &priContent)
@@ -135,19 +142,44 @@ void MainWindow::insertAddons(QString &priContent)
         return;
     }
 
-    bool isCopyEnabled = false;
-    if (ui->checkBox->isChecked()) {
+    bool isCopyEnabled = ui->checkBox->isChecked();
+    if (isCopyEnabled) {
         QDir dir(m_AppPath);
         if (dir.exists()) {
             dir.mkdir("addons");
-            isCopyEnabled = true;
             m_AddonsPath = m_AppPath + "addons/";
         }
     }
-    for (int i = 0; i < m_SelectedAddons.size(); i++) {
-        if (isCopyEnabled) {
-            copyRecursively(m_OFAddonsPath + m_SelectedAddons.at(i), m_AddonsPath);
-            QFile::copy(m_OFAddonsPath + m_SelectedAddons.at(i), m_AddonsPath + m_SelectedAddons.at(i));
+    else {
+        QStringList includePaths;
+        for (int i = 0; i < m_SelectedAddons.size(); i++) {
+            const QString addonName = m_SelectedAddons.at(i);
+            priContent += "#" + addonName + "\n";
+            const QString addonPath = m_OFAddonsPath + addonName;
+            QDirIterator dirIt(addonPath, QDirIterator::Subdirectories);
+            while (dirIt.hasNext()) {
+                dirIt.next();
+                if (dirIt.fileName() == "." || dirIt.fileName() == "..") {
+                    continue;
+                }
+
+                if (dirIt.fileInfo().isDir()) {
+                    if (includePaths.contains(dirIt.fileInfo().absoluteDir().absolutePath()) == false) {
+                        priContent += "INCLUDEPATH += " + dirIt.filePath() + "\n";
+                    }
+                    continue;
+                }
+
+                if (dirIt.fileInfo().suffix() == "cpp") {
+                    priContent += "SOURCES += " + dirIt.filePath() + "\n";
+                }
+                else if (dirIt.fileInfo().suffix() == "h") {
+                    priContent += "HEADERS += " + dirIt.filePath() + "\n";
+                }
+                else if (dirIt.fileInfo().suffix() == "lib") {
+                    priContent += "LIBS += " + dirIt.filePath() + "\n";
+                }
+            }
         }
     }
 }
