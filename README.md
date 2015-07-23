@@ -1,2 +1,5 @@
-# ofQMake
-*.pri file for using qmake with openFrameworks 0.8.4
+# ofQProjectGenerator
+Makes it easy to generate qmake project files for openFrameworks.
+
+# TODO
+[ ] Enable copy addons to project folder
