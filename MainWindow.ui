@@ -106,7 +106,7 @@
          <bool>true</bool>
         </property>
         <property name="toolTip">
-         <string>Coming soon...</string>
+         <string/>
         </property>
         <property name="text">
          <string>Copy selected addons to project folder</string>
