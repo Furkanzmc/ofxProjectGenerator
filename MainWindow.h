@@ -20,7 +20,11 @@ public:
 private:
     Ui::MainWindow *ui;
     QList<QListWidgetItem *> m_AddonItems;
-    QString m_OFPath, m_OFAddonsPath, m_OFAppTemplatePath, m_AppPath, m_AddonsPath;
+    QString m_OFPath,
+            m_OFAddonsPath,
+            m_OFAppTemplatePath,
+            m_AppPath,
+            m_AddonsPath/*addons folder in the app directory*/;
     bool m_IsAppNameValid;
     QStringList m_SelectedAddons;
 
@@ -34,7 +38,6 @@ private slots:
 
 private:
     void insertAddons(QString &priContent);
-    bool copyAddon(const QString &addonName);
 
     bool copyRecursively(const QString &srcFilePath, const QString &tgtFilePath);
 };

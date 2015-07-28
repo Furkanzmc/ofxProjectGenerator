@@ -130,7 +130,7 @@ void MainWindow::generateProject()
     priFile.close();
     ui->statusBar->showMessage("Project generated", 5000);
     ui->lineEditAppName->clear();
-    for (int i = 0;i < m_AddonItems.size();i++) {
+    for (int i = 0; i < m_AddonItems.size(); i++) {
         QListWidgetItem *item = m_AddonItems.at(i);
         item->setCheckState(Qt::Unchecked);
     }
@@ -143,68 +143,50 @@ void MainWindow::insertAddons(QString &priContent)
     }
 
     bool isCopyEnabled = ui->checkBox->isChecked();
+    QString addonRootPath = m_OFAddonsPath;
     if (isCopyEnabled) {
         QDir dir(m_AppPath);
         if (dir.exists()) {
             dir.mkdir("addons");
             m_AddonsPath = m_AppPath + "addons/";
         }
-    }
-    else {
-        QStringList includePaths;
+        addonRootPath = m_AddonsPath;
         for (int i = 0; i < m_SelectedAddons.size(); i++) {
-            const QString addonName = m_SelectedAddons.at(i);
-            priContent += "#" + addonName + "\n";
-            const QString addonPath = m_OFAddonsPath + addonName;
-            QDirIterator dirIt(addonPath, QDirIterator::Subdirectories);
-            while (dirIt.hasNext()) {
-                dirIt.next();
-                if (dirIt.fileName() == "." || dirIt.fileName() == "..") {
-                    continue;
-                }
-
-                if (dirIt.fileInfo().isDir()) {
-                    if (includePaths.contains(dirIt.fileInfo().absoluteDir().absolutePath()) == false) {
-                        priContent += "INCLUDEPATH += " + dirIt.filePath() + "\n";
-                    }
-                    continue;
-                }
-
-                if (dirIt.fileInfo().suffix() == "cpp") {
-                    priContent += "SOURCES += " + dirIt.filePath() + "\n";
-                }
-                else if (dirIt.fileInfo().suffix() == "h") {
-                    priContent += "HEADERS += " + dirIt.filePath() + "\n";
-                }
-                else if (dirIt.fileInfo().suffix() == "lib") {
-                    priContent += "LIBS += " + dirIt.filePath() + "\n";
-                }
-            }
+            const QString srcAddonPath = m_OFAddonsPath + m_SelectedAddons.at(i);
+            copyRecursively(srcAddonPath, m_AddonsPath);
         }
     }
-}
 
-bool MainWindow::copyAddon(const QString &addonName)
-{
-    //First create folders for the files and then do the copying
-    QDir dir(m_AddonsPath);
-    if (dir.exists()) {
-        dir.mkdir(addonName);
-
-        QDirIterator it(m_OFAddonsPath + addonName);
-        while (it.hasNext()) {
-            it.next();
-            if (it.fileInfo().isDir() == false || it.fileName() == "." || it.fileName() == "..") {
+    QStringList includePaths;
+    for (int i = 0; i < m_SelectedAddons.size(); i++) {
+        const QString addonName = m_SelectedAddons.at(i);
+        priContent += "#" + addonName + "\n";
+        const QString addonPath = addonRootPath + addonName;
+        QDirIterator dirIt(addonPath, QDirIterator::Subdirectories);
+        while (dirIt.hasNext()) {
+            dirIt.next();
+            if (dirIt.fileName() == "." || dirIt.fileName() == "..") {
                 continue;
             }
 
-            const QString subDir = it.filePath().remove(0, it.filePath().lastIndexOf("/addons") + 7);
-            QDir asd(m_AddonsPath + subDir);
-            qDebug() << asd.path();
-            dir.mkdir(subDir);
+            if (dirIt.fileInfo().isDir()) {
+                if (includePaths.contains(dirIt.fileInfo().absoluteDir().absolutePath()) == false) {
+                    priContent += "INCLUDEPATH += " + dirIt.filePath() + "\n";
+                }
+                continue;
+            }
+
+            if (dirIt.fileInfo().suffix() == "cpp") {
+                priContent += "SOURCES += " + dirIt.filePath() + "\n";
+            }
+            else if (dirIt.fileInfo().suffix() == "h") {
+                priContent += "HEADERS += " + dirIt.filePath() + "\n";
+            }
+            else if (dirIt.fileInfo().suffix() == "lib") {
+                priContent += "LIBS += " + dirIt.filePath() + "\n";
+            }
         }
     }
-    return true;
 }
 
 bool MainWindow::copyRecursively(const QString &srcFilePath, const QString &tgtFilePath)
@@ -212,22 +194,28 @@ bool MainWindow::copyRecursively(const QString &srcFilePath, const QString &tgtF
     QFileInfo srcFileInfo(srcFilePath);
     if (srcFileInfo.isDir()) {
         QDir targetDir(tgtFilePath);
-        targetDir.cdUp();
-        if (!targetDir.mkdir(QFileInfo(tgtFilePath).fileName()))
+        if (targetDir.exists() == false) {
+            targetDir.cdUp();
+        }
+        if (!targetDir.mkdir(srcFileInfo.fileName())) {
             return false;
+        }
+
+        targetDir.cd(srcFileInfo.fileName());
         QDir sourceDir(srcFilePath);
         QStringList fileNames = sourceDir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System);
         foreach (const QString &fileName, fileNames) {
             const QString newSrcFilePath = srcFilePath + QLatin1Char('/') + fileName;
-            const QString newTgtFilePath = tgtFilePath + QLatin1Char('/') + fileName;
+            const QString newTgtFilePath = targetDir.absolutePath() + QLatin1Char('/') + fileName;
             if (!copyRecursively(newSrcFilePath, newTgtFilePath)) {
                 return false;
             }
         }
     }
     else {
-        if (!QFile::copy(srcFilePath, tgtFilePath))
+        if (!QFile::copy(srcFilePath, tgtFilePath)) {
             return false;
+        }
     }
     return true;
 }
