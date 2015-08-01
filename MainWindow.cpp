@@ -3,6 +3,7 @@
 #include <QDirIterator>
 #include <QDebug>
 #include <QFileDialog>
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -13,10 +14,13 @@ MainWindow::MainWindow(QWidget *parent)
     , m_AppPath("")
     , m_AddonsPath("")
     , m_IsAppNameValid(false)
+    , m_IsOFPathValid(false)
+    , m_IsAppFolderValid(false)
 {
     ui->setupUi(this);
     connect(ui->lineEditOfPath, SIGNAL(textChanged(QString)), this, SLOT(getAddonNames()));
     connect(ui->lineEditAppName, SIGNAL(textChanged(QString)), this, SLOT(checkAppNameValidity(QString)));
+    connect(ui->lineEditAppPath, SIGNAL(textChanged(QString)), this, SLOT(checkAppFolderValidity(QString)));
     connect(ui->listWidget, SIGNAL(itemClicked(QListWidgetItem *)), this, SLOT(getSelectedAddons(QListWidgetItem *)));
     connect(ui->buttonOfPath, SIGNAL(pressed()), this, SLOT(browseOFPath()));
     connect(ui->buttonAppPath, SIGNAL(pressed()), this, SLOT(browseAppPath()));
@@ -42,9 +46,11 @@ void MainWindow::getAddonNames()
     QDirIterator dirIteratorTop(m_OFAddonsPath, QDirIterator::NoIteratorFlags);
     if (dirIteratorTop.hasNext() == false) {
         ui->lineEditOfPath->setStyleSheet("color: red");
+        m_IsOFPathValid = false;
     }
     else {
         ui->lineEditOfPath->setStyleSheet("");
+        m_IsOFPathValid = true;
     }
     while (dirIteratorTop.hasNext()) {
         dirIteratorTop.next();
@@ -64,9 +70,30 @@ void MainWindow::checkAppNameValidity(QString str)
         ui->lineEditAppName->setStyleSheet("color: red");
         m_IsAppNameValid = false;
     }
+    else if (str.length() == 0) {
+        ui->lineEditAppName->setStyleSheet("color: red");
+        m_IsAppNameValid = false;
+    }
     else {
         ui->lineEditAppName->setStyleSheet("");
         m_IsAppNameValid = true;
+    }
+}
+
+void MainWindow::checkAppFolderValidity(QString str)
+{
+    QDir dir(str);
+    if (dir.exists() == false) {
+        ui->lineEditAppPath->setStyleSheet("color: red");
+        m_IsAppFolderValid = false;
+    }
+    else if (str.length() == 0) {
+        ui->lineEditAppPath->setStyleSheet("color: red");
+        m_IsAppFolderValid = false;
+    }
+    else if (dir.exists()) {
+        ui->lineEditAppPath->setStyleSheet("");
+        m_IsAppFolderValid = true;
     }
 }
 
@@ -100,6 +127,11 @@ void MainWindow::getSelectedAddons(QListWidgetItem *selectedItem)
 
 void MainWindow::generateProject()
 {
+    const QString errStr = getErrorString();
+    if (errStr.length() > 0) {
+        QMessageBox::warning(this, "Error!", "Please correct the following misteke(s).\n" + errStr, QMessageBox::Ok);
+        return;
+    }
     QFile priFile("./data/openFrameworks-0.8.4.pri");
     QDir dir(ui->lineEditAppPath->text() + "/");
     //Create the project dir and copy the template
@@ -134,6 +166,21 @@ void MainWindow::generateProject()
         QListWidgetItem *item = m_AddonItems.at(i);
         item->setCheckState(Qt::Unchecked);
     }
+}
+
+QString MainWindow::getErrorString() const
+{
+    QString errStr;
+    if (m_IsAppNameValid == false) {
+        errStr += "* Type a valid app name";
+    }
+    if (m_IsAppFolderValid == false) {
+        errStr += "\n* Type a valid app path";
+    }
+    if (m_IsOFPathValid == false) {
+        errStr += "\n* Type a valid openFrameworks path";
+    }
+    return errStr;
 }
 
 void MainWindow::insertAddons(QString &priContent)

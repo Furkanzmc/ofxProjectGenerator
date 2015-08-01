@@ -25,20 +25,21 @@ private:
             m_OFAppTemplatePath,
             m_AppPath,
             m_AddonsPath/*addons folder in the app directory*/;
-    bool m_IsAppNameValid;
+    bool m_IsAppNameValid, m_IsOFPathValid, m_IsAppFolderValid;
     QStringList m_SelectedAddons;
 
 private slots:
     void getAddonNames();
     void checkAppNameValidity(QString str);
+    void checkAppFolderValidity(QString str);
     void browseOFPath();
     void browseAppPath();
     void getSelectedAddons(QListWidgetItem *selectedItem);
     void generateProject();
 
 private:
+    QString getErrorString() const;
     void insertAddons(QString &priContent);
-
     bool copyRecursively(const QString &srcFilePath, const QString &tgtFilePath);
 };
 
