@@ -116,7 +116,7 @@ void MainWindow::generateProject()
         QString contents = QString(priFile.readAll());
         //Insert OF path
         QString ofPathWithoutSuffix = m_OFPath;
-        contents.replace("#OF_PATH#", ofPathWithoutSuffix.remove(ofPathWithoutSuffix.length() - 1, 1));
+        contents.replace("#OF_PATH#", "\"" + ofPathWithoutSuffix.remove(ofPathWithoutSuffix.length() - 1, 1) + "\"");
         insertAddons(contents);
 
         //Write the changed pri file to the new path
@@ -171,19 +171,19 @@ void MainWindow::insertAddons(QString &priContent)
 
             if (dirIt.fileInfo().isDir()) {
                 if (includePaths.contains(dirIt.fileInfo().absoluteDir().absolutePath()) == false) {
-                    priContent += "INCLUDEPATH += " + dirIt.filePath() + "\n";
+                    priContent += "INCLUDEPATH += \"" + dirIt.filePath() + "\"\n";
                 }
                 continue;
             }
 
             if (dirIt.fileInfo().suffix() == "cpp") {
-                priContent += "SOURCES += " + dirIt.filePath() + "\n";
+                priContent += "SOURCES += \"" + dirIt.filePath() + "\"\n";
             }
             else if (dirIt.fileInfo().suffix() == "h") {
-                priContent += "HEADERS += " + dirIt.filePath() + "\n";
+                priContent += "HEADERS += \"" + dirIt.filePath() + "\"\n";
             }
             else if (dirIt.fileInfo().suffix() == "lib") {
-                priContent += "LIBS += " + dirIt.filePath() + "\n";
+                priContent += "LIBS += \"" + dirIt.filePath() + "\"\n";
             }
         }
     }
