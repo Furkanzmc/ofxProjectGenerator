@@ -199,8 +199,12 @@ void MainWindow::insertAddons(QString &priContent)
         }
         addonRootPath = m_AddonsPath;
         for (int i = 0; i < m_SelectedAddons.size(); i++) {
-            const QString srcAddonPath = m_OFAddonsPath + m_SelectedAddons.at(i);
-            copyRecursively(srcAddonPath, m_AddonsPath);
+            const QString currentAddonName = m_SelectedAddons.at(i);
+            const QString srcAddonPath = m_OFAddonsPath + currentAddonName;
+            QDir dir(m_AddonsPath);
+            dir.mkdir(currentAddonName);
+            copyRecursively(srcAddonPath + "/src", m_AddonsPath + currentAddonName);
+            copyRecursively(srcAddonPath + "/libs", m_AddonsPath + currentAddonName);
         }
     }
 
@@ -209,28 +213,48 @@ void MainWindow::insertAddons(QString &priContent)
         const QString addonName = m_SelectedAddons.at(i);
         priContent += "#" + addonName + "\n";
         const QString addonPath = addonRootPath + addonName;
-        QDirIterator dirIt(addonPath, QDirIterator::Subdirectories);
-        while (dirIt.hasNext()) {
-            dirIt.next();
-            if (dirIt.fileName() == "." || dirIt.fileName() == "..") {
-                continue;
+        QStringList folderList;
+        folderList.append("/src");
+        folderList.append("/libs");
+        if (isCopyEnabled) {
+            priContent += "INCLUDEPATH += \"$$PWD/addons/" + addonName + "/src/" + "\"\n";
+            QDir libsDir(addonPath + "/libs");
+            if (libsDir.exists()) {
+                priContent += "INCLUDEPATH += \"$$PWD/addons/" + addonName + "/libs/" + "\"\n";
             }
-
-            if (dirIt.fileInfo().isDir()) {
-                if (includePaths.contains(dirIt.fileInfo().absoluteDir().absolutePath()) == false) {
-                    priContent += "INCLUDEPATH += \"" + dirIt.filePath() + "\"\n";
+        }
+        else {
+            priContent += "INCLUDEPATH += \"" + addonPath + "/src/" + "\"\n";
+            QDir libsDir(addonPath + "/libs");
+            if (libsDir.exists()) {
+                priContent += "INCLUDEPATH += \"" + addonPath + "/libs/" + "\"\n";
+            }
+        }
+        foreach (const QString &folder, folderList) {
+            QDirIterator dirIt(addonPath + folder, QDirIterator::Subdirectories);
+            while (dirIt.hasNext()) {
+                dirIt.next();
+                if (dirIt.fileName() == "." || dirIt.fileName() == "..") {
+                    continue;
                 }
-                continue;
-            }
 
-            if (dirIt.fileInfo().suffix() == "cpp") {
-                priContent += "SOURCES += \"" + dirIt.filePath() + "\"\n";
-            }
-            else if (dirIt.fileInfo().suffix() == "h") {
-                priContent += "HEADERS += \"" + dirIt.filePath() + "\"\n";
-            }
-            else if (dirIt.fileInfo().suffix() == "lib") {
-                priContent += "LIBS += \"" + dirIt.filePath() + "\"\n";
+                const QString filePath = isCopyEnabled ? dirIt.filePath().replace(m_AddonsPath, "$$PWD/addons/") : dirIt.filePath();
+                if (dirIt.fileInfo().isDir()) {
+                    if (includePaths.contains(dirIt.fileInfo().absoluteDir().absolutePath()) == false) {
+                        priContent += "INCLUDEPATH += \"" + filePath + "\"\n";
+                    }
+                    continue;
+                }
+
+                if (dirIt.fileInfo().suffix() == "cpp") {
+                    priContent += "SOURCES += \"" + filePath + "\"\n";
+                }
+                else if (dirIt.fileInfo().suffix() == "h") {
+                    priContent += "HEADERS += \"" + filePath + "\"\n";
+                }
+                else if (dirIt.fileInfo().suffix() == "lib") {
+                    priContent += "LIBS += \"" + filePath + "\"\n";
+                }
             }
         }
     }
