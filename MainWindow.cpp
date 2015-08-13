@@ -190,7 +190,7 @@ void MainWindow::insertAddons(QString &priContent)
     }
 
     bool isCopyEnabled = ui->checkBox->isChecked();
-    QString addonRootPath = "$$OF/addons/";
+    QString addonRootPath = m_OFAddonsPath;
     if (isCopyEnabled) {
         QDir dir(m_AppPath);
         if (dir.exists()) {
@@ -224,10 +224,10 @@ void MainWindow::insertAddons(QString &priContent)
             }
         }
         else {
-            priContent += "INCLUDEPATH += \"" + addonPath + "/src/" + "\"\n";
+            priContent += "INCLUDEPATH += \"$$OF/" + addonName + "/src/" + "\"\n";
             QDir libsDir(addonPath + "/libs");
             if (libsDir.exists()) {
-                priContent += "INCLUDEPATH += \"" + addonPath + "/libs/" + "\"\n";
+                priContent += "INCLUDEPATH += \"$$OF/" + addonName + "/libs/" + "\"\n";
             }
         }
         foreach (const QString &folder, folderList) {
@@ -238,7 +238,8 @@ void MainWindow::insertAddons(QString &priContent)
                     continue;
                 }
 
-                const QString filePath = isCopyEnabled ? dirIt.filePath().replace(m_AddonsPath, "$$PWD/addons/") : dirIt.filePath();
+                QString filePath = isCopyEnabled ? dirIt.filePath().replace(m_AddonsPath, "$$PWD/addons/") : dirIt.filePath();
+                filePath.replace(addonRootPath, "$$OF/addons/");
                 if (dirIt.fileInfo().isDir()) {
                     if (includePaths.contains(dirIt.fileInfo().absoluteDir().absolutePath()) == false) {
                         priContent += "INCLUDEPATH += \"" + filePath + "\"\n";
