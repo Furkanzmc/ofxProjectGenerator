@@ -190,7 +190,7 @@ void MainWindow::insertAddons(QString &priContent)
     }
 
     bool isCopyEnabled = ui->checkBox->isChecked();
-    QString addonRootPath = m_OFAddonsPath;
+    QString addonRootPath = "$$OF/addons/";
     if (isCopyEnabled) {
         QDir dir(m_AppPath);
         if (dir.exists()) {
