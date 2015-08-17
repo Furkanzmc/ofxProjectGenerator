@@ -224,12 +224,13 @@ void MainWindow::insertAddons(QString &priContent)
             }
         }
         else {
-            priContent += "INCLUDEPATH += \"$$OF/" + addonName + "/src/" + "\"\n";
+            priContent += "INCLUDEPATH += \"$$OF/addons/" + addonName + "/src/" + "\"\n";
             QDir libsDir(addonPath + "/libs");
             if (libsDir.exists()) {
-                priContent += "INCLUDEPATH += \"$$OF/" + addonName + "/libs/" + "\"\n";
+                priContent += "INCLUDEPATH += \"$$OF/addons/" + addonName + "/libs/" + "\"\n";
             }
         }
+
         foreach (const QString &folder, folderList) {
             QDirIterator dirIt(addonPath + folder, QDirIterator::Subdirectories);
             while (dirIt.hasNext()) {
