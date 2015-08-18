@@ -1,4 +1,5 @@
 #openFrameworks path.
+CONFIG += USE_PRECOMPILED_LIB
 OF = #OF_PATH#
 win32:CONFIG(release, debug|release): {
     QMAKE_LFLAGS += /NODEFAULTLIB:PocoFoundationmd.lib
@@ -136,7 +137,6 @@ LIBS += -lodbccp32
 LIBS += -lGLu32
 
 #OPENFRAMEWORKS
-#LIBS += $$OF/libs/openFrameworksCompiled/lib/vs/openframeworksLib_debug.lib
 INCLUDEPATH += $$OF/libs/openFrameworks
 INCLUDEPATH += $$OF/libs/openFrameworks/types
 INCLUDEPATH += $$OF/libs/openFrameworks/sound
@@ -150,6 +150,20 @@ INCLUDEPATH += $$OF/libs/openFrameworks/app
 INCLUDEPATH += $$OF/libs/openFrameworks/graphics
 INCLUDEPATH += $$OF/libs/openFrameworks/communication
 
+USE_PRECOMPILED_LIB {
+    win32:CONFIG(debug, debug|release): OF_LIB_PATH = $$OF/libs/openFrameworksCompiled/lib/vs/openframeworksLib_debug.lib
+    else:win32:CONFIG(release, debug|release): OF_LIB_PATH = $$OF/libs/openFrameworksCompiled/lib/vs/openframeworksLib_release.lib
+}
+
+win32:CONFIG(debug, debug|release): OF_LIB_PATH = $$OF/libs/openFrameworksCompiled/lib/vs/openframeworksLib_debug.lib
+else:win32:CONFIG(release, debug|release): OF_LIB_PATH = $$OF/libs/openFrameworksCompiled/lib/vs/openframeworksLib_release.lib
+
+if(exists($$OF_LIB_PATH)) {
+    LIBS += $$OF_LIB_PATH
+    message("Using precompiled library for OF")
+}
+else {
+message("Compiling OF")
 #3d
 SOURCES += $$OF/libs/openFrameworks/3d/of3dPrimitives.cpp
 SOURCES += $$OF/libs/openFrameworks/3d/ofMesh.cpp
@@ -257,7 +271,6 @@ HEADERS += $$OF/libs/openFrameworks/math/ofVec4f.h
 HEADERS += $$OF/libs/openFrameworks/math/ofVectorMath.h
 
 #sound
-
 SOURCES += $$OF/libs/openFrameworks/sound/ofFmodSoundPlayer.cpp
 SOURCES += $$OF/libs/openFrameworks/sound/ofRtAudioSoundStream.cpp
 SOURCES += $$OF/libs/openFrameworks/sound/ofSoundPlayer.cpp
@@ -322,5 +335,5 @@ HEADERS += $$OF/libs/openFrameworks/video/ofVideoGrabber.h
 HEADERS += $$OF/libs/openFrameworks/video/ofVideoPlayer.h
 
 HEADERS += $$OF/libs/openFrameworks/ofMain.h
-
+}
 #addons
