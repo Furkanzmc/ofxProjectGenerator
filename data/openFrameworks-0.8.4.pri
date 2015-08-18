@@ -155,9 +155,6 @@ USE_PRECOMPILED_LIB {
     else:win32:CONFIG(release, debug|release): OF_LIB_PATH = $$OF/libs/openFrameworksCompiled/lib/vs/openframeworksLib_release.lib
 }
 
-win32:CONFIG(debug, debug|release): OF_LIB_PATH = $$OF/libs/openFrameworksCompiled/lib/vs/openframeworksLib_debug.lib
-else:win32:CONFIG(release, debug|release): OF_LIB_PATH = $$OF/libs/openFrameworksCompiled/lib/vs/openframeworksLib_release.lib
-
 if(exists($$OF_LIB_PATH)) {
     LIBS += $$OF_LIB_PATH
     message("Using precompiled library for OF")
