@@ -2,7 +2,9 @@ project(${PROJ_NAME})
 cmake_minimum_required(VERSION 2.8)
 set(OF_PATH ${OPENFRAMEWORKS_PATH})
 include("${OF_PATH}/findOpenFrameworks-v0.9.cmake")
-include(ofAddons.cmake)
+if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/ofAddons.cmake")
+    include(ofAddons.cmake)
+endif()
 include_directories(
     ${OF_INCLUDE_PATH}
     ${ADDONS_INCLUDE_PATH}
