@@ -1,11 +1,13 @@
 # ofQProjectGenerator
-Makes it easy to generate qmake project files for openFrameworks 0.8.4.
+Makes it easy to generate qmake project files for openFrameworks 0.8.4 and v0.9.
+CMake projects only have support for v0.9, and QMake projects only have support for v0.8.4. :D
+I plan to fix that soon. But you are so very welcome to send a PR. ;)
 
-![SS](https://lh3.googleusercontent.com/Nh6MTVxA9nDW82TX0zuG2k_9hwkuuDaWP2srcKosRRk=w512-h522-no)
+![SS](http://i.imgur.com/H9lcIlN.jpg)
 
 # TODO
 - [x] Enable copy addons to project folder
-- [ ] Add support for [Cmake](http://www.cmake.org/) projects
+- [x] Add support for [Cmake](http://www.cmake.org/) projects
 - [ ] Add support for VS 2012-2015 projects
 - [ ] Add support for [Code:Blocks](http://www.codeblocks.org/)
 - [ ] Add support for [CodeLite](http://codelite.org/)
