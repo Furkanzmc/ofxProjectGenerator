@@ -1,0 +1,252 @@
+project(openFrameworks)
+cmake_minimum_required(VERSION 2.8)
+include_directories(${OF_INCLUDE_PATH})
+
+#3d
+set(OF_SRC
+    ${OF_PATH}/libs/openFrameworks/3d/of3dPrimitives.cpp
+    ${OF_PATH}/libs/openFrameworks/3d/of3dUtils.cpp
+    ${OF_PATH}/libs/openFrameworks/3d/ofCamera.cpp
+    ${OF_PATH}/libs/openFrameworks/3d/ofEasyCam.cpp
+    ${OF_PATH}/libs/openFrameworks/3d/ofMesh.cpp
+    ${OF_PATH}/libs/openFrameworks/3d/ofNode.cpp
+    )
+
+set(OF_HEADERS
+    ${OF_PATH}/libs/openFrameworks/3d/of3dPrimitives.h
+    ${OF_PATH}/libs/openFrameworks/3d/of3dUtils.h
+    ${OF_PATH}/libs/openFrameworks/3d/ofCamera.h
+    ${OF_PATH}/libs/openFrameworks/3d/ofEasyCam.h
+    ${OF_PATH}/libs/openFrameworks/3d/ofMesh.h
+    ${OF_PATH}/libs/openFrameworks/3d/ofNode.h
+    )
+
+
+#app
+list(APPEND OF_SRC
+    ${OF_PATH}/libs/openFrameworks/app/ofAppGLFWWindow.cpp
+    ${OF_PATH}/libs/openFrameworks/app/ofAppGlutWindow.cpp
+    ${OF_PATH}/libs/openFrameworks/app/ofAppNoWindow.cpp
+    ${OF_PATH}/libs/openFrameworks/app/ofAppRunner.cpp
+    ${OF_PATH}/libs/openFrameworks/app/ofMainLoop.cpp
+    )
+
+list(APPEND OF_HEADERS
+    ${OF_PATH}/libs/openFrameworks/app/ofAppBaseWindow.h
+    ${OF_PATH}/libs/openFrameworks/app/ofAppGLFWWindow.h
+    ${OF_PATH}/libs/openFrameworks/app/ofAppGlutWindow.h
+    ${OF_PATH}/libs/openFrameworks/app/ofAppNoWindow.h
+    ${OF_PATH}/libs/openFrameworks/app/ofAppRunner.h
+    ${OF_PATH}/libs/openFrameworks/app/ofBaseApp.h
+    ${OF_PATH}/libs/openFrameworks/app/ofMainLoop.h
+    )
+
+
+#communication
+list(APPEND OF_SRC
+    ${OF_PATH}/libs/openFrameworks/communication/ofSerial.cpp
+    ${OF_PATH}/libs/openFrameworks/communication/ofArduino.cpp
+    )
+
+list(APPEND OF_HEADERS
+    ${OF_PATH}/libs/openFrameworks/communication/ofSerial.h
+    ${OF_PATH}/libs/openFrameworks/communication/ofArduino.h
+    )
+
+
+#events
+list(APPEND OF_SRC
+    ${OF_PATH}/libs/openFrameworks/events/ofEvents.cpp
+    )
+
+list(APPEND OF_HEADERS
+    ${OF_PATH}/libs/openFrameworks/events/ofEvent.h
+    ${OF_PATH}/libs/openFrameworks/events/ofEvents.h
+    ${OF_PATH}/libs/openFrameworks/events/ofEventUtils.h
+    )
+
+
+#gl
+list(APPEND OF_SRC
+    ${OF_PATH}/libs/openFrameworks/gl/ofBufferObject.cpp
+    ${OF_PATH}/libs/openFrameworks/gl/ofFbo.cpp
+    ${OF_PATH}/libs/openFrameworks/gl/ofGLProgrammableRenderer.cpp
+    ${OF_PATH}/libs/openFrameworks/gl/ofGLRenderer.cpp
+    ${OF_PATH}/libs/openFrameworks/gl/ofGLUtils.cpp
+    ${OF_PATH}/libs/openFrameworks/gl/ofLight.cpp
+    ${OF_PATH}/libs/openFrameworks/gl/ofMaterial.cpp
+    ${OF_PATH}/libs/openFrameworks/gl/ofShader.cpp
+    ${OF_PATH}/libs/openFrameworks/gl/ofTexture.cpp
+    ${OF_PATH}/libs/openFrameworks/gl/ofVbo.cpp
+    ${OF_PATH}/libs/openFrameworks/gl/ofVboMesh.cpp
+    )
+
+list(APPEND OF_HEADERS
+    ${OF_PATH}/libs/openFrameworks/gl/ofBufferObject.h
+    ${OF_PATH}/libs/openFrameworks/gl/ofFbo.h
+    ${OF_PATH}/libs/openFrameworks/gl/ofGLProgrammableRenderer.h
+    ${OF_PATH}/libs/openFrameworks/gl/ofGLRenderer.h
+    ${OF_PATH}/libs/openFrameworks/gl/ofGLUtils.h
+    ${OF_PATH}/libs/openFrameworks/gl/ofLight.h
+    ${OF_PATH}/libs/openFrameworks/gl/ofMaterial.h
+    ${OF_PATH}/libs/openFrameworks/gl/ofShader.h
+    ${OF_PATH}/libs/openFrameworks/gl/ofTexture.h
+    ${OF_PATH}/libs/openFrameworks/gl/ofVbo.h
+    ${OF_PATH}/libs/openFrameworks/gl/ofVboMesh.h
+    )
+
+
+#graphics
+list(APPEND OF_SRC
+    ${OF_PATH}/libs/openFrameworks/graphics/of3dGraphics.cpp
+    ${OF_PATH}/libs/openFrameworks/graphics/ofBitmapFont.cpp
+    ${OF_PATH}/libs/openFrameworks/graphics/ofCairoRenderer.cpp
+    ${OF_PATH}/libs/openFrameworks/graphics/ofGraphics.cpp
+    ${OF_PATH}/libs/openFrameworks/graphics/ofImage.cpp
+    ${OF_PATH}/libs/openFrameworks/graphics/ofPath.cpp
+    ${OF_PATH}/libs/openFrameworks/graphics/ofPixels.cpp
+    ${OF_PATH}/libs/openFrameworks/graphics/ofPolyline.cpp
+    ${OF_PATH}/libs/openFrameworks/graphics/ofRendererCollection.cpp
+    ${OF_PATH}/libs/openFrameworks/graphics/ofTessellator.cpp
+    ${OF_PATH}/libs/openFrameworks/graphics/ofTrueTypeFont.cpp
+    )
+
+list(APPEND OF_HEADERS
+    ${OF_PATH}/libs/openFrameworks/graphics/of3dGraphics.h
+    ${OF_PATH}/libs/openFrameworks/graphics/ofBitmapFont.h
+    ${OF_PATH}/libs/openFrameworks/graphics/ofCairoRenderer.h
+    ${OF_PATH}/libs/openFrameworks/graphics/ofGraphics.h
+    ${OF_PATH}/libs/openFrameworks/graphics/ofImage.h
+    ${OF_PATH}/libs/openFrameworks/graphics/ofPath.h
+    ${OF_PATH}/libs/openFrameworks/graphics/ofPixels.h
+    ${OF_PATH}/libs/openFrameworks/graphics/ofPolyline.h
+    ${OF_PATH}/libs/openFrameworks/graphics/ofRendererCollection.h
+    ${OF_PATH}/libs/openFrameworks/graphics/ofTessellator.h
+    ${OF_PATH}/libs/openFrameworks/graphics/ofTrueTypeFont.h
+    )
+
+
+#math
+list(APPEND OF_SRC
+    ${OF_PATH}/libs/openFrameworks/math/ofMath.cpp
+    ${OF_PATH}/libs/openFrameworks/math/ofMatrix3x3.cpp
+    ${OF_PATH}/libs/openFrameworks/math/ofMatrix4x4.cpp
+    ${OF_PATH}/libs/openFrameworks/math/ofQuaternion.cpp
+    ${OF_PATH}/libs/openFrameworks/math/ofVec2f.cpp
+    ${OF_PATH}/libs/openFrameworks/math/ofVec4f.cpp
+    )
+
+list(APPEND OF_HEADERS
+    ${OF_PATH}/libs/openFrameworks/math/ofMath.h
+    ${OF_PATH}/libs/openFrameworks/math/ofMatrix3x3.h
+    ${OF_PATH}/libs/openFrameworks/math/ofMatrix4x4.h
+    ${OF_PATH}/libs/openFrameworks/math/ofQuaternion.h
+    ${OF_PATH}/libs/openFrameworks/math/ofVec2f.h
+    ${OF_PATH}/libs/openFrameworks/math/ofVec3f.h
+    ${OF_PATH}/libs/openFrameworks/math/ofVec4f.h
+    ${OF_PATH}/libs/openFrameworks/math/ofVectorMath.h
+    )
+
+
+#sound
+list(APPEND OF_SRC
+    ${OF_PATH}/libs/openFrameworks/sound/ofBaseSoundStream.cpp
+    ${OF_PATH}/libs/openFrameworks/sound/ofFmodSoundPlayer.cpp
+    ${OF_PATH}/libs/openFrameworks/sound/ofOpenALSoundPlayer.cpp
+    ${OF_PATH}/libs/openFrameworks/sound/ofRtAudioSoundStream.cpp
+    ${OF_PATH}/libs/openFrameworks/sound/ofSoundBuffer.cpp
+    ${OF_PATH}/libs/openFrameworks/sound/ofSoundPlayer.cpp
+    ${OF_PATH}/libs/openFrameworks/sound/ofSoundStream.cpp
+    )
+
+list(APPEND OF_HEADERS
+    ${OF_PATH}/libs/openFrameworks/sound/ofBaseSoundPlayer.h
+    ${OF_PATH}/libs/openFrameworks/sound/ofBaseSoundStream.h
+    ${OF_PATH}/libs/openFrameworks/sound/ofOpenALSoundPlayer.h
+    ${OF_PATH}/libs/openFrameworks/sound/ofFmodSoundPlayer.h
+    ${OF_PATH}/libs/openFrameworks/sound/ofRtAudioSoundStream.h
+    ${OF_PATH}/libs/openFrameworks/sound/ofSoundBuffer.h
+    ${OF_PATH}/libs/openFrameworks/sound/ofSoundPlayer.h
+    ${OF_PATH}/libs/openFrameworks/sound/ofSoundStream.h
+    ${OF_PATH}/libs/openFrameworks/sound/ofSoundUtils.h
+    )
+
+#types
+list(APPEND OF_SRC
+    ${OF_PATH}/libs/openFrameworks/types/ofBaseTypes.cpp
+    ${OF_PATH}/libs/openFrameworks/types/ofColor.cpp
+    ${OF_PATH}/libs/openFrameworks/types/ofParameter.cpp
+    ${OF_PATH}/libs/openFrameworks/types/ofParameterGroup.cpp
+    ${OF_PATH}/libs/openFrameworks/types/ofRectangle.cpp
+    )
+
+list(APPEND OF_HEADERS
+    ${OF_PATH}/libs/openFrameworks/types/ofBaseTypes.h
+    ${OF_PATH}/libs/openFrameworks/types/ofColor.h
+    ${OF_PATH}/libs/openFrameworks/types/ofParameter.h
+    ${OF_PATH}/libs/openFrameworks/types/ofParameterGroup.h
+    ${OF_PATH}/libs/openFrameworks/types/ofPoint.h
+    ${OF_PATH}/libs/openFrameworks/types/ofRectangle.h
+    ${OF_PATH}/libs/openFrameworks/types/ofTypes.h
+    )
+
+
+#utils
+list(APPEND OF_SRC
+    ${OF_PATH}/libs/openFrameworks/utils/ofFileUtils.cpp
+    ${OF_PATH}/libs/openFrameworks/utils/ofFpsCounter.cpp
+    ${OF_PATH}/libs/openFrameworks/utils/ofLog.cpp
+    ${OF_PATH}/libs/openFrameworks/utils/ofMatrixStack.cpp
+    ${OF_PATH}/libs/openFrameworks/utils/ofSystemUtils.cpp
+    ${OF_PATH}/libs/openFrameworks/utils/ofThread.cpp
+    ${OF_PATH}/libs/openFrameworks/utils/ofTimer.cpp
+    ${OF_PATH}/libs/openFrameworks/utils/ofURLFileLoader.cpp
+    ${OF_PATH}/libs/openFrameworks/utils/ofUtils.cpp
+    ${OF_PATH}/libs/openFrameworks/utils/ofXml.cpp
+    )
+
+list(APPEND OF_HEADERS
+    ${OF_PATH}/libs/openFrameworks/utils/ofFpsCounter.h
+    ${OF_PATH}/libs/openFrameworks/utils/ofConstants.h
+    ${OF_PATH}/libs/openFrameworks/utils/ofFileUtils.h
+    ${OF_PATH}/libs/openFrameworks/utils/ofLog.h
+    ${OF_PATH}/libs/openFrameworks/utils/ofMatrixStack.h
+    ${OF_PATH}/libs/openFrameworks/utils/ofSystemUtils.h
+    ${OF_PATH}/libs/openFrameworks/utils/ofThread.h
+    ${OF_PATH}/libs/openFrameworks/utils/ofThreadChannel.h
+    ${OF_PATH}/libs/openFrameworks/utils/ofTimer.h
+    ${OF_PATH}/libs/openFrameworks/utils/ofURLFileLoader.h
+    ${OF_PATH}/libs/openFrameworks/utils/ofUtils.h
+    ${OF_PATH}/libs/openFrameworks/utils/ofXml.h
+    ${OF_PATH}/libs/openFrameworks/utils/ofNoise.h
+    )
+
+
+#video
+list(APPEND OF_SRC
+    ${OF_PATH}/libs/openFrameworks/video/ofDirectShowGrabber.cpp
+    ${OF_PATH}/libs/openFrameworks/video/ofDirectShowPlayer.cpp
+    ${OF_PATH}/libs/openFrameworks/video/ofVideoGrabber.cpp
+    ${OF_PATH}/libs/openFrameworks/video/ofVideoPlayer.cpp
+)
+
+list(APPEND OF_HEADERS
+    ${OF_PATH}/libs/openFrameworks/video/ofDirectShowGrabber.h
+    ${OF_PATH}/libs/openFrameworks/video/ofDirectShowPlayer.h
+    ${OF_PATH}/libs/openFrameworks/video/ofVideoGrabber.h
+    ${OF_PATH}/libs/openFrameworks/video/ofVideoPlayer.h
+)
+
+
+list(APPEND OF_HEADERS ${OF_PATH}/libs/openFrameworks/ofMain.h)
+
+add_library(openFrameworks STATIC
+  ${OF_SRC}
+)
+
+
+set_target_properties(openFrameworks
+    PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+)
