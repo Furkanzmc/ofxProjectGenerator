@@ -4,6 +4,8 @@
 #include <QDebug>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QSettings>
+#include <QDesktopServices>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -13,7 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_OFAppTemplatePath("")
     , m_AppPath("")
     , m_AddonsPath("")
-    , m_PriFile("openFrameworks-0.8.4.pri")
+    , m_PriFile("./data/openFrameworks-0.8.4.pri")
     , m_IsAppNameValid(false)
     , m_IsOFPathValid(false)
     , m_IsAppFolderValid(false)
@@ -28,6 +30,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->buttonAppPath, SIGNAL(pressed()), this, SLOT(browseAppPath()));
     connect(ui->buttonGenerate, SIGNAL(pressed()), this, SLOT(generateProject()));
     connect(ui->comboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(changeOfVersion(int)));
+
+    QSettings settings;
+    ui->lineEditOfPath->setText(settings.value("of_path").toString());
 }
 
 MainWindow::~MainWindow()
@@ -54,6 +59,9 @@ void MainWindow::getAddonNames()
     else {
         ui->lineEditOfPath->setStyleSheet("");
         m_IsOFPathValid = true;
+        QSettings settings;
+        settings.setValue("of_path", ui->lineEditOfPath->text());
+        settings.sync();
     }
     while (dirIteratorTop.hasNext()) {
         dirIteratorTop.next();
@@ -137,10 +145,25 @@ void MainWindow::generateProject()
     }
 
     if (ui->radioButtonCmake->isChecked()) {
+        if (m_OFVersion == 0) {
+            QMessageBox::information(this, "Sorry... :(", "Version 0.8.4 is not yet supported with Cmake.");
+            return;
+        }
+
         generateCMakeProject();
     }
     else if (ui->radioButtonQmake->isChecked()) {
+        if (m_OFVersion > 0) {
+            QMessageBox::information(this, "Sorry... :(", "Version 0.9 is not yet supported with Qmake..");
+            return;
+        }
+
         generateQMakeProject();
+    }
+
+    QFile folder(m_AppPath);
+    if (folder.exists()) {
+        QDesktopServices::openUrl(QUrl("file:///" + m_AppPath));
     }
 }
 
@@ -158,7 +181,7 @@ void MainWindow::generateQMakeProject()
         insertAddonsQMake(contents);
 
         //Write the changed pri file to the new path
-        QFile newProFile(m_AppPath + m_PriFile);
+        QFile newProFile(m_AppPath + m_PriFile.right(m_PriFile.length() - m_PriFile.lastIndexOf("/")));
         if (newProFile.open(QIODevice::WriteOnly)) {
             newProFile.write(contents.toStdString().c_str());
             newProFile.close();
@@ -218,6 +241,12 @@ void MainWindow::generateCMakeProject()
     file.close();
 
     insertAddonsCMake();
+    ui->statusBar->showMessage("Project generated", 5000);
+    ui->lineEditAppName->clear();
+    for (int i = 0; i < m_AddonItems.size(); i++) {
+        QListWidgetItem *item = m_AddonItems.at(i);
+        item->setCheckState(Qt::Unchecked);
+    }
 }
 
 void MainWindow::changeOfVersion(int currentIndex)
