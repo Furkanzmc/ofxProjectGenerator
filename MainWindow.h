@@ -24,8 +24,12 @@ private:
             m_OFAddonsPath,
             m_OFAppTemplatePath,
             m_AppPath,
-            m_AddonsPath/*addons folder in the app directory*/;
-    bool m_IsAppNameValid, m_IsOFPathValid, m_IsAppFolderValid;
+            m_AddonsPath/*addons folder in the app directory*/,
+            m_PriFile;
+    bool m_IsAppNameValid,
+         m_IsOFPathValid,
+         m_IsAppFolderValid;
+    int m_OFVersion;
     QStringList m_SelectedAddons;
 
 private slots:
@@ -37,10 +41,16 @@ private slots:
     void getSelectedAddons(QListWidgetItem *selectedItem);
     void generateProject();
 
+    void generateQMakeProject();
+    void generateCMakeProject();
+    void changeOfVersion(int currentIndex);
+
 private:
     QString getErrorString() const;
-    void insertAddons(QString &priContent);
+    void insertAddonsQMake(QString &priContent);
+    void insertAddonsCMake();
     bool copyRecursively(const QString &srcFilePath, const QString &tgtFilePath);
+    void copyOFTemplateFiles();
 };
 
 #endif // MAINWINDOW_H

@@ -72,6 +72,70 @@
      </layout>
     </item>
     <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_7">
+      <item>
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="radioButtonCmake">
+        <property name="text">
+         <string>Cmake</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="radioButtonQmake">
+        <property name="text">
+         <string>Qmake</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_5">
+      <item>
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>openFrameworksVersion</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="comboBox">
+        <item>
+         <property name="text">
+          <string>0.8.4</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>0.9 x64</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>0.9 x86</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
      <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
        <widget class="QLabel" name="label_3">
@@ -121,6 +185,9 @@
        </widget>
       </item>
      </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_4"/>
     </item>
    </layout>
   </widget>

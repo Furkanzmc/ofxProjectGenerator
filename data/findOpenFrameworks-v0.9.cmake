@@ -7,7 +7,7 @@ set(ADDONS_INCLUDE_PATH "")
 set(ADDONS_PATH ${OF_PATH}/addons)
 set(USE_PRECOMPILED_LIB true)
 #This can also be Win32
-set(AR x64)
+set(AR ${ARCHITECTURE})
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(DEBUG_MODE ON CACHE BOOL "turn on debug mode")

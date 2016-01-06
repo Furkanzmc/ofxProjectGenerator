@@ -13,9 +13,11 @@ MainWindow::MainWindow(QWidget *parent)
     , m_OFAppTemplatePath("")
     , m_AppPath("")
     , m_AddonsPath("")
+    , m_PriFile("openFrameworks-0.8.4.pri")
     , m_IsAppNameValid(false)
     , m_IsOFPathValid(false)
     , m_IsAppFolderValid(false)
+    , m_OFVersion(0)
 {
     ui->setupUi(this);
     connect(ui->lineEditOfPath, SIGNAL(textChanged(QString)), this, SLOT(getAddonNames()));
@@ -25,6 +27,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->buttonOfPath, SIGNAL(pressed()), this, SLOT(browseOFPath()));
     connect(ui->buttonAppPath, SIGNAL(pressed()), this, SLOT(browseAppPath()));
     connect(ui->buttonGenerate, SIGNAL(pressed()), this, SLOT(generateProject()));
+    connect(ui->comboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(changeOfVersion(int)));
 }
 
 MainWindow::~MainWindow()
@@ -132,27 +135,30 @@ void MainWindow::generateProject()
         QMessageBox::warning(this, "Error!", "Please correct the following misteke(s).\n" + errStr, QMessageBox::Ok);
         return;
     }
-    QFile priFile("./data/openFrameworks-0.8.4.pri");
-    QDir dir(ui->lineEditAppPath->text() + "/");
-    //Create the project dir and copy the template
-    if (dir.exists()) {
-        dir.mkdir(ui->lineEditAppName->text());
-        m_AppPath = ui->lineEditAppPath->text() + "/" + ui->lineEditAppName->text() + "/";
-        QFile::copy(m_OFAppTemplatePath + "main.cpp", m_AppPath + "main.cpp");
-        QFile::copy(m_OFAppTemplatePath + "ofApp.cpp", m_AppPath + "ofApp.cpp");
-        QFile::copy(m_OFAppTemplatePath + "ofApp.h", m_AppPath + "ofApp.h");
-        QFile::copy("./data/proFileTemplate.pro", m_AppPath + ui->lineEditAppName->text() + ".pro");
+
+    if (ui->radioButtonCmake->isChecked()) {
+        generateCMakeProject();
     }
+    else if (ui->radioButtonQmake->isChecked()) {
+        generateQMakeProject();
+    }
+}
+
+void MainWindow::generateQMakeProject()
+{
+    QFile priFile(m_PriFile);
+    copyOFTemplateFiles();
+    QFile::copy("./data/proFileTemplate.pro", m_AppPath + ui->lineEditAppName->text() + ".pro");
 
     if (priFile.exists() && priFile.open(QIODevice::ReadOnly)) {
         QString contents = QString(priFile.readAll());
         //Insert OF path
         QString ofPathWithoutSuffix = m_OFPath;
         contents.replace("#OF_PATH#", "\"" + ofPathWithoutSuffix.remove(ofPathWithoutSuffix.length() - 1, 1) + "\"");
-        insertAddons(contents);
+        insertAddonsQMake(contents);
 
         //Write the changed pri file to the new path
-        QFile newProFile(m_AppPath + "openFrameworks-0.8.4.pri");
+        QFile newProFile(m_AppPath + m_PriFile);
         if (newProFile.open(QIODevice::WriteOnly)) {
             newProFile.write(contents.toStdString().c_str());
             newProFile.close();
@@ -165,6 +171,63 @@ void MainWindow::generateProject()
     for (int i = 0; i < m_AddonItems.size(); i++) {
         QListWidgetItem *item = m_AddonItems.at(i);
         item->setCheckState(Qt::Unchecked);
+    }
+}
+
+void MainWindow::generateCMakeProject()
+{
+    const QString projCmakeFile = "./data/project_CMakeLists.txt";
+    const QString findCmakeFile = "./data/findOpenFrameworks-v0.9.cmake";
+    const QString ofCmakeFile = "./data/of_CMakeLists.txt";
+
+    copyOFTemplateFiles();
+
+    //These files don't require any change, so copy them as they are.
+    QFile::copy(ofCmakeFile, m_OFPath + "/CMakeLists.txt");
+    QFile file(findCmakeFile);
+    if (file.open(QIODevice::ReadOnly)) {
+        QString contents = QString(file.readAll());
+        contents.replace("${ARCHITECTURE}", m_OFVersion == 1 ? "x64" : "Win32");
+        QFile newFile(m_OFPath + "/findOpenFrameworks-v0.9.cmake");
+        if (newFile.open(QIODevice::WriteOnly)) {
+            newFile.write(contents.toUtf8());
+            newFile.close();
+        }
+    }
+    file.close();
+
+    //Open projCmakeFile and change the OF_PATH and PROJ_NAME
+    file.setFileName(projCmakeFile);
+    if (file.exists() == false) {
+        QMessageBox::warning(this, "Error!", "./data/project_CMakeLists.txt file doesn't exist!");
+        return;
+    }
+
+    file.close();
+    file.setFileName(projCmakeFile);
+    if (file.open(QIODevice::ReadOnly)) {
+        QString contents = QString(file.readAll());
+        contents.replace("${PROJ_NAME}", ui->lineEditAppName->text());
+        contents.replace("${OPENFRAMEWORKS_PATH}", m_OFPath);
+        QFile newFile(m_AppPath + "/CMakeLists.txt");
+        if (newFile.open(QIODevice::WriteOnly)) {
+            newFile.write(contents.toUtf8());
+            newFile.close();
+        }
+    }
+    file.close();
+
+    insertAddonsCMake();
+}
+
+void MainWindow::changeOfVersion(int currentIndex)
+{
+    m_OFVersion = currentIndex;
+    if (currentIndex == 0) {
+        m_PriFile = "./data/openFrameworks-0.8.4.pri";
+    }
+    else if (currentIndex == 1) {
+        m_PriFile = "./data/openFrameworks-0.9.pri";
     }
 }
 
@@ -183,7 +246,7 @@ QString MainWindow::getErrorString() const
     return errStr;
 }
 
-void MainWindow::insertAddons(QString &priContent)
+void MainWindow::insertAddonsQMake(QString &priContent)
 {
     if (m_SelectedAddons.size() == 0) {
         return;
@@ -262,6 +325,121 @@ void MainWindow::insertAddons(QString &priContent)
     }
 }
 
+void MainWindow::insertAddonsCMake()
+{
+    if (m_SelectedAddons.size() == 0) {
+        return;
+    }
+
+    QString content;
+    bool isCopyEnabled = ui->checkBox->isChecked();
+    QString addonRootPath = m_OFAddonsPath;
+    if (isCopyEnabled) {
+        QDir dir(m_AppPath);
+        if (dir.exists()) {
+            dir.mkdir("addons");
+            m_AddonsPath = m_AppPath + "addons/";
+        }
+        addonRootPath = m_AddonsPath;
+        for (int i = 0; i < m_SelectedAddons.size(); i++) {
+            const QString currentAddonName = m_SelectedAddons.at(i);
+            const QString srcAddonPath = m_OFAddonsPath + currentAddonName;
+            QDir dir(m_AddonsPath);
+            dir.mkdir(currentAddonName);
+            copyRecursively(srcAddonPath + "/src", m_AddonsPath + currentAddonName);
+            copyRecursively(srcAddonPath + "/libs", m_AddonsPath + currentAddonName);
+        }
+    }
+
+    QStringList sources, headers, libs;
+    QStringList includePaths;
+    for (int i = 0; i < m_SelectedAddons.size(); i++) {
+        const QString addonName = m_SelectedAddons.at(i);
+        content += "#" + addonName + "\n";
+        const QString addonPath = addonRootPath + addonName;
+        QStringList folderList;
+        folderList.append("/src");
+        folderList.append("/libs");
+        if (isCopyEnabled) {
+            includePaths.append("addons/" + addonName + "/src");
+            QDir libsDir(addonPath + "/libs");
+            if (libsDir.exists()) {
+                includePaths.append("addons/" + addonName + "/libs");
+            }
+        }
+        else {
+            includePaths.append("${ADDONS_PATH}/" + addonName + "/src");
+            QDir libsDir(addonPath + "/libs");
+            if (libsDir.exists()) {
+                includePaths.append("${ADDONS_PATH}/" + addonName + "/libs");
+            }
+        }
+
+        foreach (const QString &folder, folderList) {
+            QDirIterator dirIt(addonPath + folder, QDirIterator::Subdirectories);
+            while (dirIt.hasNext()) {
+                dirIt.next();
+                if (dirIt.fileName() == "." || dirIt.fileName() == "..") {
+                    continue;
+                }
+
+                QString filePath = isCopyEnabled ? dirIt.filePath().replace(m_AddonsPath, "addons/") : dirIt.filePath();
+                filePath.replace(addonRootPath, "${ADDONS_PATH}/");
+                if (dirIt.fileInfo().isDir()) {
+                    if (includePaths.contains(dirIt.fileInfo().absoluteDir().absolutePath()) == false) {
+                        includePaths.append(filePath);
+                    }
+                    continue;
+                }
+
+                if (dirIt.fileInfo().suffix() == "cpp") {
+                    sources.append(filePath);
+                }
+                else if (dirIt.fileInfo().suffix() == "h") {
+                    headers.append(filePath);
+                }
+                else if (dirIt.fileInfo().suffix() == "lib") {
+                    libs.append(filePath);
+                }
+            }
+        }
+
+        //Add the paths to the content
+        content += "list(APPEND ADDONS_SRC\n";
+        for (const QString &src : sources) {
+            content += src + "\n";
+        }
+        content += ")\n";
+
+        content += "list(APPEND ADDONS_HEADERS\n";
+        for (const QString &header : headers) {
+            content += header + "\n";
+        }
+        content += ")\n";
+
+        content += "list(APPEND ADDONS_INCLUDE_PATH\n";
+        for (const QString &inc : includePaths) {
+            content += inc + "\n";
+        }
+        content += ")\n";
+
+        content += "list(APPEND ADDONS_LIBS\n";
+        for (const QString &lib : libs) {
+            content += lib + "\n";
+        }
+        content += ")\n";
+
+        QFile file(m_AppPath + "/ofAddons.cmake");
+        if (file.open(QIODevice::WriteOnly)) {
+            file.write(content.toUtf8());
+        }
+        else {
+            qDebug() << "ASDSDSAD";
+        }
+        file.close();
+    }
+}
+
 bool MainWindow::copyRecursively(const QString &srcFilePath, const QString &tgtFilePath)
 {
     QFileInfo srcFileInfo(srcFilePath);
@@ -291,4 +469,17 @@ bool MainWindow::copyRecursively(const QString &srcFilePath, const QString &tgtF
         }
     }
     return true;
+}
+
+void MainWindow::copyOFTemplateFiles()
+{
+    QDir dir(ui->lineEditAppPath->text() + "/");
+    //Create the project dir and copy the template
+    if (dir.exists()) {
+        dir.mkdir(ui->lineEditAppName->text());
+        m_AppPath = ui->lineEditAppPath->text() + "/" + ui->lineEditAppName->text() + "/";
+        QFile::copy(m_OFAppTemplatePath + "main.cpp", m_AppPath + "main.cpp");
+        QFile::copy(m_OFAppTemplatePath + "ofApp.cpp", m_AppPath + "ofApp.cpp");
+        QFile::copy(m_OFAppTemplatePath + "ofApp.h", m_AppPath + "ofApp.h");
+    }
 }
