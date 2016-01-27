@@ -30,6 +30,15 @@ if(MSVC)
             -D_UNICODE
             -DUNICODE
             )
+
+        set(OF_LINKER_FLAGS
+            /NODEFAULTLIB:PocoFoundationmdd.lib
+            /NODEFAULTLIB:atlthunk.lib
+            /NODEFAULTLIB:msvcrt
+            /NODEFAULTLIB:libcmt
+            /NODEFAULTLIB:LIBC
+            /NODEFAULTLIB:LIBCMTD
+            )
     else()
         ADD_DEFINITIONS(
             -DWIN32
@@ -41,7 +50,16 @@ if(MSVC)
             -D_UNICODE
             -DUNICODE
             )
+
+        set(OF_LINKER_FLAGS
+            /NODEFAULTLIB:PocoFoundationmd.lib
+            /NODEFAULTLIB:LIBCMT
+            /NODEFAULTLIB:LIBC.LIBS
+            /NODEFAULTLIB:atlthunk.lib
+            )
     endif(DEBUG_MODE)
+
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OF_LINKER_FLAGS}")
 endif(MSVC)
 
 #BOOST
