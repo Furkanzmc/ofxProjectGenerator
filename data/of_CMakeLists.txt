@@ -39,8 +39,9 @@ list(APPEND OF_HEADERS
     ${OF_PATH}/libs/openFrameworks/app/ofAppRunner.h
     ${OF_PATH}/libs/openFrameworks/app/ofBaseApp.h
     ${OF_PATH}/libs/openFrameworks/app/ofMainLoop.h
+    ${OF_PATH}/libs/openFrameworks/app/ofIcon.h
+    ${OF_PATH}/libs/openFrameworks/app/ofWindowSettings.h
     )
-
 
 #communication
 list(APPEND OF_SRC
@@ -228,25 +229,25 @@ list(APPEND OF_SRC
     ${OF_PATH}/libs/openFrameworks/video/ofDirectShowPlayer.cpp
     ${OF_PATH}/libs/openFrameworks/video/ofVideoGrabber.cpp
     ${OF_PATH}/libs/openFrameworks/video/ofVideoPlayer.cpp
-)
+    )
 
 list(APPEND OF_HEADERS
     ${OF_PATH}/libs/openFrameworks/video/ofDirectShowGrabber.h
     ${OF_PATH}/libs/openFrameworks/video/ofDirectShowPlayer.h
     ${OF_PATH}/libs/openFrameworks/video/ofVideoGrabber.h
     ${OF_PATH}/libs/openFrameworks/video/ofVideoPlayer.h
-)
+    )
 
 
 list(APPEND OF_HEADERS ${OF_PATH}/libs/openFrameworks/ofMain.h)
 
 add_library(openFrameworks STATIC
-  ${OF_SRC}
-)
+    ${OF_SRC}
+    )
 
 
 set_target_properties(openFrameworks
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
-)
+    )
