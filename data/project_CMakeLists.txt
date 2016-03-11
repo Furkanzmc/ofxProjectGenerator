@@ -18,7 +18,7 @@ add_executable(${PROJECT_NAME} ${SRC_LIST} ${ADDONS_SRC} ${ADDONS_HEADERS})
 if (USE_PRECOMPILED_LIB)
     target_link_libraries(${PROJECT_NAME} ${OF_LIBS} ${ADDONS_LIBS})
 else()
-    add_subdirectory("D:/Development/Tools/of_v0.9.0_vs_release/" openFrameworks)
+    add_subdirectory(${OF_PATH} openFrameworks)
     target_link_libraries(${PROJECT_NAME} openFrameworks ${OF_LIBS} ${ADDONS_LIBS})
 endif(USE_PRECOMPILED_LIB)
 
