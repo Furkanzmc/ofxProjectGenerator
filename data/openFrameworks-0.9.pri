@@ -1,7 +1,20 @@
 #openFrameworks path.
 CONFIG += USE_PRECOMPILED_LIB
 OF = #OF_PATH#
-BUILD_TYPE = #BUILD#
+AR = #AR#
+OF_VERSION = 0.9
+
+equals(AR, "x64") {
+    message("NOTICE [openFrameworks]: Using libraries for x64")
+}
+else:equals(AR, "Win32") {
+    message("NOTICE [openFrameworks]: Using libraries for Win32")
+}
+else {
+    message("NOTICE [openFrameworks]: Architecture is not set. Defaulting to x64")
+    AR = x64
+}
+
 win32:CONFIG(release, debug|release): {
     QMAKE_LFLAGS += /NODEFAULTLIB:PocoFoundationmd.lib
     QMAKE_LFLAGS += /NODEFAULTLIB:LIBCMT
@@ -36,40 +49,52 @@ else:win32:CONFIG(debug, debug|release): {
 }
 
 #BOOST
-win32:CONFIG(debug, debug|release): LIBS += $$OF/libs/boost/lib/vs/Win32/libboost_filesystem-vc140-mt-gd-1_58.lib
-else:win32:CONFIG(release, debug|release): LIBS += $$OF/libs/boost/lib/vs/Win32/libboost_filesystem-vc140-mt-1_58.lib
-win32:CONFIG(debug, debug|release): LIBS += $$OF/libs/boost/lib/vs/Win32/libboost_system-vc140-mt-gd-1_58.lib
-else:win32:CONFIG(release, debug|release): LIBS += $$OF/libs/boost/lib/vs/Win32/libboost_system-vc140-mt-1_58.lib
+win32:CONFIG(debug, debug|release): {
+    LIBS += $$OF/libs/boost/lib/vs/$$AR/libboost_filesystem-vc140-mt-gd-1_58.lib
+    LIBS += $$OF/libs/boost/lib/vs/$$AR/libboost_system-vc140-mt-gd-1_58.lib
+}
+else:win32:CONFIG(release, debug|release): {
+    LIBS += $$OF/libs/boost/lib/vs/$$AR/libboost_filesystem-vc140-mt-1_58.lib
+    LIBS += $$OF/libs/boost/lib/vs/$$AR/libboost_system-vc140-mt-1_58.lib
+}
 INCLUDEPATH += $$OF/libs/boost/include
 INCLUDEPATH += $$OF/libs/boost/include/boost
 
 #CAIRO
-LIBS += $$OF/libs/cairo/lib/vs/Win32/cairo-static.lib
-LIBS += $$OF/libs/cairo/lib/vs/Win32/pixman-1.lib
+LIBS += $$OF/libs/cairo/lib/vs/$$AR/cairo-static.lib
+LIBS += $$OF/libs/cairo/lib/vs/$$AR/pixman-1.lib
+LIBS += $$OF/libs/cairo/lib/vs/$$AR/libpng.lib
+
 INCLUDEPATH += $$OF/libs/cairo/include
 INCLUDEPATH += $$OF/libs/cairo/include/libpng15
 INCLUDEPATH += $$OF/libs/cairo/include/pixman-1
 INCLUDEPATH += $$OF/libs/cairo/include/cairo
 
 #FMODEX
-LIBS += $$OF/libs/fmodex/lib/vs/Win32/fmodex_vc.lib
+equals(AR, "x64") {
+    LIBS += $$OF/libs/fmodex/lib/vs/$$AR/fmodex64_vc.lib
+}
+else {
+    LIBS += $$OF/libs/fmodex/lib/vs/$$AR/fmodex_vc.lib
+}
+
 INCLUDEPATH += $$OF/libs/fmodex/include
 
 #FREEIMAGE
-LIBS += $$OF/libs/FreeImage/lib/vs/Win32/FreeImage.lib
+LIBS += $$OF/libs/FreeImage/lib/vs/$$AR/FreeImage.lib
 INCLUDEPATH += $$OF/libs/FreeImage/include
 
 #FREETYPE
-LIBS += $$OF/libs/freetype/lib/vs/Win32/libfreetype.lib
+LIBS += $$OF/libs/freetype/lib/vs/$$AR/libfreetype.lib
 INCLUDEPATH += $$OF/libs/freetype/include
 INCLUDEPATH += $$OF/libs/freetype/include/freetype2
 
 #GLEW
-LIBS += $$OF/libs/glew/lib/vs/Win32/glew32s.lib
+LIBS += $$OF/libs/glew/lib/vs/$$AR/glew32s.lib
 INCLUDEPATH += $$OF/libs/glew/include
 
 #GLFW
-LIBS += $$OF/libs/glfw/lib/vs/Win32/glfw3.lib
+LIBS += $$OF/libs/glfw/lib/vs/$$AR/glfw3.lib
 INCLUDEPATH += $$OF/libs/glfw/include
 INCLUDEPATH += $$OF/libs/glfw/include/GLFW
 
@@ -78,30 +103,34 @@ LIBS += $$OF/libs/glu/lib/vs/Win32/glu32.lib
 INCLUDEPATH += $$OF/libs/glu/include
 
 #GLUT
-LIBS += $$OF/libs/glut/lib/vs/Win32/glut32.lib
+LIBS += $$OF/libs/glut/lib/vs/$$AR/glut32.lib
 INCLUDEPATH += $$OF/libs/glut/include
 
 #OPENSSL
-LIBS += $$OF/libs/openssl/lib/vs/Win32/libeay32md.lib
-LIBS += $$OF/libs/openssl/lib/vs/Win32/ssleay32md.lib
+LIBS += $$OF/libs/openssl/lib/vs/$$AR/libeay32md.lib
+LIBS += $$OF/libs/openssl/lib/vs/$$AR/ssleay32md.lib
 INCLUDEPATH += $$OF/libs/openssl/include
 INCLUDEPATH += $$OF/libs/openssl/include/openssl
 
 #POCO
-win32:CONFIG(debug, debug|release): LIBS += $$OF/libs/poco/lib/vs/Win32/PocoCryptomdd.lib
-else:win32:CONFIG(release, debug|release): LIBS += $$OF/libs/poco/lib/vs/Win32/PocoCryptomd.lib
-win32:CONFIG(debug, debug|release): LIBS += $$OF/libs/poco/lib/vs/Win32/PocoUtilmdd.lib
-else:win32:CONFIG(release, debug|release): LIBS += $$OF/libs/poco/lib/vs/Win32/PocoUtilmd.lib
-win32:CONFIG(debug, debug|release): LIBS += $$OF/libs/poco/lib/vs/Win32/PocoXMLmdd.lib
-else:win32:CONFIG(release, debug|release): LIBS += $$OF/libs/poco/lib/vs/Win32/PocoXMLmd.lib
-win32:CONFIG(debug, debug|release): LIBS += $$OF/libs/poco/lib/vs/Win32/PocoNetmdd.lib
-else:win32:CONFIG(release, debug|release): LIBS += $$OF/libs/poco/lib/vs/Win32/PocoNetmd.lib
-win32:CONFIG(debug, debug|release): LIBS += $$OF/libs/poco/lib/vs/Win32/PocoNetSSLmdd.lib
-else:win32:CONFIG(release, debug|release): LIBS += $$OF/libs/poco/lib/vs/Win32/PocoNetSSLmd.lib
-win32:CONFIG(debug, debug|release): LIBS += $$OF/libs/poco/lib/vs/Win32/PocoFoundationmdd.lib
-win32:CONFIG(release, debug|release): LIBS += $$OF/libs/poco/lib/vs/Win32/PocoFoundationmd.lib
-win32:CONFIG(debug, debug|release): LIBS += $$OF/libs/poco/lib/vs/Win32/PocoJSONmdd.lib
-win32:CONFIG(release, debug|release): LIBS += $$OF/libs/poco/lib/vs/Win32/PocoJSONmd.lib
+win32:CONFIG(debug, debug|release): {
+    LIBS += $$OF/libs/poco/lib/vs/$$AR/PocoCryptomdd.lib
+    LIBS += $$OF/libs/poco/lib/vs/$$AR/PocoUtilmdd.lib
+    LIBS += $$OF/libs/poco/lib/vs/$$AR/PocoXMLmdd.lib
+    LIBS += $$OF/libs/poco/lib/vs/$$AR/PocoNetmdd.lib
+    LIBS += $$OF/libs/poco/lib/vs/$$AR/PocoNetSSLmdd.lib
+    LIBS += $$OF/libs/poco/lib/vs/$$AR/PocoFoundationmdd.lib
+    LIBS += $$OF/libs/poco/lib/vs/$$AR/PocoJSONmdd.lib
+}
+else:win32:CONFIG(release, debug|release): {
+    LIBS += $$OF/libs/poco/lib/vs/$$AR/PocoCryptomd.lib
+    LIBS += $$OF/libs/poco/lib/vs/$$AR/PocoUtilmd.lib
+    LIBS += $$OF/libs/poco/lib/vs/$$AR/PocoXMLmd.lib
+    LIBS += $$OF/libs/poco/lib/vs/$$AR/PocoNetmd.lib
+    LIBS += $$OF/libs/poco/lib/vs/$$AR/PocoNetSSLmd.lib
+    LIBS += $$OF/libs/poco/lib/vs/$$AR/PocoFoundationmd.lib
+    LIBS += $$OF/libs/poco/lib/vs/$$AR/PocoJSONmd.lib
+}
 INCLUDEPATH += $$OF/libs/poco/include
 
 #QUICKTIME
@@ -111,12 +140,12 @@ LIBS += $$OF/libs/quicktime/lib/vs/Win32/Rave.lib
 INCLUDEPATH += $$OF/libs/quicktime/include
 
 #RTAUDIO
-win32:CONFIG(debug, debug|release):LIBS += $$OF/libs/rtAudio/lib/vs/Win32/rtAudioD.lib
-else:win32:CONFIG(release, debug|release):LIBS += $$OF/libs/rtAudio/lib/vs/Win32/rtAudio.lib
+win32:CONFIG(debug, debug|release):LIBS += $$OF/libs/rtAudio/lib/vs/$$AR/rtAudioD.lib
+else:win32:CONFIG(release, debug|release):LIBS += $$OF/libs/rtAudio/lib/vs/$$AR/rtAudio.lib
 INCLUDEPATH += $$OF/libs/rtAudio/include
 
 #TESS2
-LIBS += $$OF/libs/tess2/lib/vs/Win32/tess2.lib
+LIBS += $$OF/libs/tess2/lib/vs/$$AR/tess2.lib
 INCLUDEPATH += $$OF/libs/tess2/include
 
 #UTF8CPP
@@ -124,8 +153,8 @@ INCLUDEPATH += $$OF/libs/utf8cpp/include
 INCLUDEPATH += $$OF/libs/utf8cpp/include/utf8
 
 #VIDEOINPUT
-win32:CONFIG(debug, debug|release):LIBS += $$OF/libs/videoInput/lib/vs/Win32/videoInputD.lib
-else:win32:CONFIG(release, debug|release):LIBS += $$OF/libs/videoInput/lib/vs/Win32/videoInput.lib
+win32:CONFIG(debug, debug|release):LIBS += $$OF/libs/videoInput/lib/vs/$$AR/videoInputD.lib
+else:win32:CONFIG(release, debug|release):LIBS += $$OF/libs/videoInput/lib/vs/$$AR/videoInput.lib
 INCLUDEPATH += $$OF/libs/videoInput/include
 
 #SYSTEM LIBS
@@ -166,16 +195,21 @@ INCLUDEPATH += $$OF/libs/openFrameworks/utils
 INCLUDEPATH += $$OF/libs/openFrameworks/video
 
 USE_PRECOMPILED_LIB {
-    win32:CONFIG(debug, debug|release): OF_LIB_PATH = $$OF/libs/openFrameworksCompiled/lib/vs/Win32/openframeworksLib_debug.lib
-    else:win32:CONFIG(release, debug|release): OF_LIB_PATH = $$OF/libs/openFrameworksCompiled/lib/vs/Win32/openframeworksLib_release.lib
+    win32:CONFIG(debug, debug|release): {
+        OF_LIB_PATH = $$OF/libs/openFrameworksCompiled/lib/vs/$$AR/openframeworksLib_debug.lib
+    }
+    else:win32:CONFIG(release, debug|release): {
+        OF_LIB_PATH = $$OF/libs/openFrameworksCompiled/lib/vs/$$AR/openframeworksLib_release.lib
+    }
 }
 
 if(exists($$OF_LIB_PATH)) {
     LIBS += $$OF_LIB_PATH
-    message("Using precompiled library for OF")
+    message("NOTICE [openFrameworks]: Using precompiled library for OF")
 }
 else {
-message("Compiling OF")
+    message("NOTICE [openFrameworks]: Compiling OF")
+
 #3d
 SOURCES += $$OF/libs/openFrameworks/3d/of3dPrimitives.cpp
 SOURCES += $$OF/libs/openFrameworks/3d/of3dUtils.cpp
@@ -205,6 +239,8 @@ HEADERS += $$OF/libs/openFrameworks/app/ofAppNoWindow.h
 HEADERS += $$OF/libs/openFrameworks/app/ofAppRunner.h
 HEADERS += $$OF/libs/openFrameworks/app/ofBaseApp.h
 HEADERS += $$OF/libs/openFrameworks/app/ofMainLoop.h
+HEADERS += $$OF/libs/openFrameworks/app/ofIcon.h
+HEADERS += $$OF/libs/openFrameworks/app/ofWindowSettings.h
 
 #communication
 SOURCES += $$OF/libs/openFrameworks/communication/ofSerial.cpp

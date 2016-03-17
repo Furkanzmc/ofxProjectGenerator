@@ -1,6 +1,8 @@
 #openFrameworks path.
 CONFIG += USE_PRECOMPILED_LIB
 OF = #OF_PATH#
+OF_VERSION = 0.8
+
 win32:CONFIG(release, debug|release): {
     QMAKE_LFLAGS += /NODEFAULTLIB:PocoFoundationmd.lib
     QMAKE_LFLAGS += /NODEFAULTLIB:LIBCMT

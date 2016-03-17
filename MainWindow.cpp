@@ -153,11 +153,6 @@ void MainWindow::generateProject()
         generateCMakeProject();
     }
     else if (ui->radioButtonQmake->isChecked()) {
-        if (m_OFVersion > 0) {
-            QMessageBox::information(this, "Sorry... :(", "Version 0.9 is not yet supported with Qmake..");
-            return;
-        }
-
         generateQMakeProject();
     }
 
@@ -172,21 +167,30 @@ void MainWindow::generateQMakeProject()
     QFile priFile(m_PriFile);
     copyOFTemplateFiles();
     QFile::copy("./data/proFileTemplate.pro", m_AppPath + ui->lineEditAppName->text() + ".pro");
+    QFile proFile(m_AppPath + ui->lineEditAppName->text() + ".pro");
+    if (proFile.exists() && proFile.open(QIODevice::ReadWrite)) {
+        QString contents = QString(proFile.readAll());
+        QString priFileName = m_PriFile;
+        contents.replace("#PRI_FILE#", priFileName.replace(m_PriFile.left(m_PriFile.lastIndexOf("/") + 1), ""));
+        proFile.resize(0);
+        proFile.write(contents.toStdString().c_str());
+        proFile.close();
+    }
 
     if (priFile.exists() && priFile.open(QIODevice::ReadOnly)) {
         QString contents = QString(priFile.readAll());
         //Insert OF path
         QString ofPathWithoutSuffix = m_OFPath;
         contents.replace("#OF_PATH#", "\"" + ofPathWithoutSuffix.remove(ofPathWithoutSuffix.length() - 1, 1) + "\"");
+        contents.replace("#AR#", m_OFVersion == 1 ? "x64" : "Win32");
         insertAddonsQMake(contents);
 
         //Write the changed pri file to the new path
-        QFile newProFile(m_AppPath + m_PriFile.right(m_PriFile.length() - m_PriFile.lastIndexOf("/")));
-        if (newProFile.open(QIODevice::WriteOnly)) {
-            newProFile.write(contents.toStdString().c_str());
-            newProFile.close();
+        QFile newPriFile(m_AppPath + m_PriFile.right(m_PriFile.length() - m_PriFile.lastIndexOf("/")));
+        if (newPriFile.open(QIODevice::WriteOnly)) {
+            newPriFile.write(contents.toStdString().c_str());
+            newPriFile.close();
         }
-
     }
     priFile.close();
     ui->statusBar->showMessage("Project generated", 5000);
@@ -255,7 +259,7 @@ void MainWindow::changeOfVersion(int currentIndex)
     if (currentIndex == 0) {
         m_PriFile = "./data/openFrameworks-0.8.4.pri";
     }
-    else if (currentIndex == 1) {
+    else {
         m_PriFile = "./data/openFrameworks-0.9.pri";
     }
 }
@@ -404,7 +408,7 @@ void MainWindow::insertAddonsCMake()
             }
         }
 
-        foreach (const QString &folder, folderList) {
+        for (const QString &folder : folderList) {
             QDirIterator dirIt(addonPath + folder, QDirIterator::Subdirectories);
             while (dirIt.hasNext()) {
                 dirIt.next();
@@ -462,9 +466,6 @@ void MainWindow::insertAddonsCMake()
         if (file.open(QIODevice::WriteOnly)) {
             file.write(content.toUtf8());
         }
-        else {
-            qDebug() << "ASDSDSAD";
-        }
         file.close();
     }
 }
@@ -484,7 +485,7 @@ bool MainWindow::copyRecursively(const QString &srcFilePath, const QString &tgtF
         targetDir.cd(srcFileInfo.fileName());
         QDir sourceDir(srcFilePath);
         QStringList fileNames = sourceDir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System);
-        foreach (const QString &fileName, fileNames) {
+        for (const QString &fileName : fileNames) {
             const QString newSrcFilePath = srcFilePath + QLatin1Char('/') + fileName;
             const QString newTgtFilePath = targetDir.absolutePath() + QLatin1Char('/') + fileName;
             if (!copyRecursively(newSrcFilePath, newTgtFilePath)) {
