@@ -1,4 +1,4 @@
-# ofxQProjectGenerator
+# ofxProjectGenerator
 Makes it easy to generate qmake project files for openFrameworks 0.8.4 and v0.9.
 CMake projects only have support for v0.9, and QMake projects only have support for v0.8.4. :D
 I plan to fix that soon. But you are so very welcome to send a PR. ;)
