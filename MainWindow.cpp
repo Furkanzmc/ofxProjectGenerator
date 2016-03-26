@@ -364,7 +364,7 @@ void MainWindow::insertAddonsCMake()
         return;
     }
 
-    QString content;
+    QString content = "";
     bool isCopyEnabled = ui->checkBox->isChecked();
     QString addonRootPath = m_OFAddonsPath;
     if (isCopyEnabled) {
@@ -384,9 +384,9 @@ void MainWindow::insertAddonsCMake()
         }
     }
 
-    QStringList sources, headers, libs;
-    QStringList includePaths;
     for (int i = 0; i < m_SelectedAddons.size(); i++) {
+        QStringList sources, headers, libs;
+        QStringList includePaths;
         const QString addonName = m_SelectedAddons.at(i);
         content += "#" + addonName + "\n";
         const QString addonPath = addonRootPath + addonName;
@@ -442,25 +442,25 @@ void MainWindow::insertAddonsCMake()
         for (const QString &src : sources) {
             content += src + "\n";
         }
-        content += ")\n";
+        content += ")\n\n";
 
         content += "list(APPEND ADDONS_HEADERS\n";
         for (const QString &header : headers) {
             content += header + "\n";
         }
-        content += ")\n";
+        content += ")\n\n";
 
         content += "list(APPEND ADDONS_INCLUDE_PATH\n";
         for (const QString &inc : includePaths) {
             content += inc + "\n";
         }
-        content += ")\n";
+        content += ")\n\n";
 
         content += "list(APPEND ADDONS_LIBS\n";
         for (const QString &lib : libs) {
             content += lib + "\n";
         }
-        content += ")\n";
+        content += ")\n\n";
 
         QFile file(m_AppPath + "/ofAddons.cmake");
         if (file.open(QIODevice::WriteOnly)) {
