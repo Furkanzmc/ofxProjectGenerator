@@ -22,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_OFVersion(0)
 {
     ui->setupUi(this);
+    this->setWindowTitle("ofxProjectGenerator");
     connect(ui->lineEditOfPath, SIGNAL(textChanged(QString)), this, SLOT(getAddonNames()));
     connect(ui->lineEditAppName, SIGNAL(textChanged(QString)), this, SLOT(checkAppNameValidity(QString)));
     connect(ui->lineEditAppPath, SIGNAL(textChanged(QString)), this, SLOT(checkAppFolderValidity(QString)));
