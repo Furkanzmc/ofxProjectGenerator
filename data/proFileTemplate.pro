@@ -53,6 +53,6 @@ win32 {
     else:win32:CONFIG(debug, debug|release): DESTDIR_WIN = $$OUT_PWD/debug
     DESTDIR_WIN ~= s,/,\\,g
     for(FILE,EXTRA_BINFILES_WIN){
-        QMAKE_POST_LINK += $$QMAKE_COPY $$quote($$FILE) $$quote($$DESTDIR_WIN) $$escape_expand(\\n\\t)
+        QMAKE_POST_LINK += $$QMAKE_COPY $$quote(\"$$FILE\") $$quote(\"$$DESTDIR_WIN\") $$escape_expand(\\n\\t)
     }
 }
