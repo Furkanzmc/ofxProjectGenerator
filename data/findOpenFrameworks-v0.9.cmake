@@ -231,6 +231,7 @@ find_library(ODBC_32 odbc32)
 find_library(ODBCCP_32 odbccp32)
 find_library(GLU_32 GLu32)
 find_library(WINMM winmm)
+find_library(WINMM Winmm)
 
 list(APPEND OF_LIBS
     ${MSIMG32}
@@ -253,9 +254,10 @@ list(APPEND OF_LIBS
     ${ODBC_32}
     ${ODBCCP_32}
     ${GLU_32}
+    ${WINMM}
     )
 
-#OPENFRAMEORKS
+# OPENFRAMEORKS
 list(APPEND OF_INCLUDE_PATH
     ${OF_PATH}/libs/openFrameworks
     ${OF_PATH}/libs/openFrameworks/types
