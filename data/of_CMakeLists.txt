@@ -2,7 +2,7 @@ project(openFrameworks)
 cmake_minimum_required(VERSION 2.8)
 include_directories(${OF_INCLUDE_PATH})
 
-#3d
+# 3d
 set(OF_SRC
     ${OF_PATH}/libs/openFrameworks/3d/of3dPrimitives.cpp
     ${OF_PATH}/libs/openFrameworks/3d/of3dUtils.cpp
@@ -22,7 +22,7 @@ set(OF_HEADERS
     )
 
 
-#app
+# app
 list(APPEND OF_SRC
     ${OF_PATH}/libs/openFrameworks/app/ofAppGLFWWindow.cpp
     ${OF_PATH}/libs/openFrameworks/app/ofAppGlutWindow.cpp
@@ -43,7 +43,7 @@ list(APPEND OF_HEADERS
     ${OF_PATH}/libs/openFrameworks/app/ofWindowSettings.h
     )
 
-#communication
+# communication
 list(APPEND OF_SRC
     ${OF_PATH}/libs/openFrameworks/communication/ofSerial.cpp
     ${OF_PATH}/libs/openFrameworks/communication/ofArduino.cpp
@@ -55,7 +55,7 @@ list(APPEND OF_HEADERS
     )
 
 
-#events
+# events
 list(APPEND OF_SRC
     ${OF_PATH}/libs/openFrameworks/events/ofEvents.cpp
     )
@@ -67,7 +67,7 @@ list(APPEND OF_HEADERS
     )
 
 
-#gl
+# gl
 list(APPEND OF_SRC
     ${OF_PATH}/libs/openFrameworks/gl/ofBufferObject.cpp
     ${OF_PATH}/libs/openFrameworks/gl/ofFbo.cpp
@@ -97,7 +97,7 @@ list(APPEND OF_HEADERS
     )
 
 
-#graphics
+# graphics
 list(APPEND OF_SRC
     ${OF_PATH}/libs/openFrameworks/graphics/of3dGraphics.cpp
     ${OF_PATH}/libs/openFrameworks/graphics/ofBitmapFont.cpp
@@ -127,7 +127,7 @@ list(APPEND OF_HEADERS
     )
 
 
-#math
+# math
 list(APPEND OF_SRC
     ${OF_PATH}/libs/openFrameworks/math/ofMath.cpp
     ${OF_PATH}/libs/openFrameworks/math/ofMatrix3x3.cpp
@@ -149,7 +149,7 @@ list(APPEND OF_HEADERS
     )
 
 
-#sound
+# sound
 list(APPEND OF_SRC
     ${OF_PATH}/libs/openFrameworks/sound/ofBaseSoundStream.cpp
     ${OF_PATH}/libs/openFrameworks/sound/ofFmodSoundPlayer.cpp
@@ -172,7 +172,7 @@ list(APPEND OF_HEADERS
     ${OF_PATH}/libs/openFrameworks/sound/ofSoundUtils.h
     )
 
-#types
+# types
 list(APPEND OF_SRC
     ${OF_PATH}/libs/openFrameworks/types/ofBaseTypes.cpp
     ${OF_PATH}/libs/openFrameworks/types/ofColor.cpp
@@ -192,7 +192,7 @@ list(APPEND OF_HEADERS
     )
 
 
-#utils
+# utils
 list(APPEND OF_SRC
     ${OF_PATH}/libs/openFrameworks/utils/ofFileUtils.cpp
     ${OF_PATH}/libs/openFrameworks/utils/ofFpsCounter.cpp
@@ -223,7 +223,7 @@ list(APPEND OF_HEADERS
     )
 
 
-#video
+# video
 list(APPEND OF_SRC
     ${OF_PATH}/libs/openFrameworks/video/ofDirectShowGrabber.cpp
     ${OF_PATH}/libs/openFrameworks/video/ofDirectShowPlayer.cpp
