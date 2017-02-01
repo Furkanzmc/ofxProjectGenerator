@@ -4,17 +4,16 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
-
+QT += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = ofxProjectGenerator
 TEMPLATE = app
 
+SOURCES += \
+        src/main.cpp \
+        src/MainWindow.cpp
 
-SOURCES += main.cpp\
-        MainWindow.cpp
+HEADERS += src/MainWindow.h
 
-HEADERS  += MainWindow.h
-
-FORMS    += MainWindow.ui
+FORMS += ui/MainWindow.ui
