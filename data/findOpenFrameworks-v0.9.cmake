@@ -79,10 +79,10 @@ else()
         ${OF_PATH}/libs/boost/lib/vs/${AR}/libboost_system-vc140-mt-1_58.lib
         )
 endif(DEBUG_MODE)
-    list(APPEND OF_INCLUDE_PATH
-        ${OF_PATH}/libs/boost/include
-        ${OF_PATH}/libs/boost/include/boost
-        )
+list(APPEND OF_INCLUDE_PATH
+    ${OF_PATH}/libs/boost/include
+    ${OF_PATH}/libs/boost/include/boost
+    )
 
 
 # CAIRO
@@ -96,7 +96,7 @@ list(APPEND OF_INCLUDE_PATH ${OF_PATH}/libs/cairo/include/pixman-1)
 list(APPEND OF_INCLUDE_PATH ${OF_PATH}/libs/cairo/include/cairo)
 
 
-# FMOEX
+# FMODEX
 if (AR STREQUAL "x64")
     list(APPEND OF_LIBS ${OF_PATH}/libs/fmodex/lib/vs/${AR}/fmodex64_vc.lib)
 else()
@@ -261,17 +261,17 @@ list(APPEND OF_LIBS
 # OPENFRAMEORKS
 list(APPEND OF_INCLUDE_PATH
     ${OF_PATH}/libs/openFrameworks
-    ${OF_PATH}/libs/openFrameworks/types
-    ${OF_PATH}/libs/openFrameworks/sound
-    ${OF_PATH}/libs/openFrameworks/video
     ${OF_PATH}/libs/openFrameworks/3d
-    ${OF_PATH}/libs/openFrameworks/math
-    ${OF_PATH}/libs/openFrameworks/events
-    ${OF_PATH}/libs/openFrameworks/utils
-    ${OF_PATH}/libs/openFrameworks/gl
     ${OF_PATH}/libs/openFrameworks/app
-    ${OF_PATH}/libs/openFrameworks/graphics
     ${OF_PATH}/libs/openFrameworks/communication
+    ${OF_PATH}/libs/openFrameworks/events
+    ${OF_PATH}/libs/openFrameworks/gl
+    ${OF_PATH}/libs/openFrameworks/graphics
+    ${OF_PATH}/libs/openFrameworks/math
+    ${OF_PATH}/libs/openFrameworks/sound
+    ${OF_PATH}/libs/openFrameworks/types
+    ${OF_PATH}/libs/openFrameworks/utils
+    ${OF_PATH}/libs/openFrameworks/video
     )
 
 if (USE_PRECOMPILED_LIB)
