@@ -5,7 +5,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     QApplication::setApplicationName("ofProjectGenerator");
-    QApplication::setApplicationVersion("0.5");
+    QApplication::setApplicationVersion("0.5.1");
     QApplication::setOrganizationName("Furkanzmc");
 
     MainWindow w;
