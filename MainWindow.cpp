@@ -6,6 +6,9 @@
 #include <QMessageBox>
 #include <QSettings>
 #include <QDesktopServices>
+#include <QListWidgetItem>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -19,21 +22,28 @@ MainWindow::MainWindow(QWidget *parent)
     , m_IsAppNameValid(false)
     , m_IsOFPathValid(false)
     , m_IsAppFolderValid(false)
+    , m_IsUpdateProject(false)
     , m_OFVersion(0)
 {
     ui->setupUi(this);
     this->setWindowTitle("ofxProjectGenerator");
+
     connect(ui->lineEditOfPath, SIGNAL(textChanged(QString)), this, SLOT(getAddonNames()));
     connect(ui->lineEditAppName, SIGNAL(textChanged(QString)), this, SLOT(checkAppNameValidity(QString)));
     connect(ui->lineEditAppPath, SIGNAL(textChanged(QString)), this, SLOT(checkAppFolderValidity(QString)));
-    connect(ui->listWidget, SIGNAL(itemClicked(QListWidgetItem *)), this, SLOT(getSelectedAddons(QListWidgetItem *)));
+    connect(ui->listWidget, SIGNAL(itemClicked(QListWidgetItem *)), this, SLOT(updateSelectedAddons(QListWidgetItem *)));
+
     connect(ui->buttonOfPath, SIGNAL(pressed()), this, SLOT(browseOFPath()));
     connect(ui->buttonAppPath, SIGNAL(pressed()), this, SLOT(browseAppPath()));
     connect(ui->buttonGenerate, SIGNAL(pressed()), this, SLOT(generateProject()));
     connect(ui->comboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(changeOfVersion(int)));
 
+    connect(ui->menuRecent_Projects, &QMenu::triggered, this, &MainWindow::recentProjectSelected);
+
     QSettings settings;
     ui->lineEditOfPath->setText(settings.value("of_path").toString());
+
+    fillRecentsMenu();
 }
 
 MainWindow::~MainWindow()
@@ -41,6 +51,7 @@ MainWindow::~MainWindow()
     for (int i = 0; i < m_AddonItems.size(); i++) {
         delete m_AddonItems[i];
     }
+
     m_AddonItems.clear();
     delete ui;
 }
@@ -76,13 +87,9 @@ void MainWindow::getAddonNames()
     }
 }
 
-void MainWindow::checkAppNameValidity(QString str)
+void MainWindow::checkAppNameValidity(const QString &str)
 {
-    if (str.contains(" ")) {
-        ui->lineEditAppName->setStyleSheet("color: red");
-        m_IsAppNameValid = false;
-    }
-    else if (str.length() == 0) {
+    if (str.contains(" ") || str.length() == 0) {
         ui->lineEditAppName->setStyleSheet("color: red");
         m_IsAppNameValid = false;
     }
@@ -123,18 +130,24 @@ void MainWindow::browseAppPath()
     ui->lineEditAppPath->setText(selectedDir);
 }
 
-void MainWindow::getSelectedAddons(QListWidgetItem *selectedItem)
+void MainWindow::updateSelectedAddons(QListWidgetItem *selectedItem)
 {
     if (selectedItem == nullptr) {
-        return;
+        for (int i = 0; i < ui->listWidget->count(); i++) {
+            QListWidgetItem *item = ui->listWidget->item(i);
+            item->setCheckState(m_SelectedAddons.contains(item->text()) ? Qt::Checked : Qt::Unchecked);
+        }
+    }
+    else {
+        if (selectedItem->checkState() == Qt::Checked && m_SelectedAddons.contains(selectedItem->text()) == false) {
+            m_SelectedAddons.append(selectedItem->text());
+        }
+        else if (selectedItem->checkState() == Qt::Unchecked && m_SelectedAddons.contains(selectedItem->text())) {
+            m_SelectedAddons.removeAt(m_SelectedAddons.indexOf(selectedItem->text()));
+        }
     }
 
-    if (selectedItem->checkState() == Qt::Checked && m_SelectedAddons.contains(selectedItem->text()) == false) {
-        m_SelectedAddons.append(selectedItem->text());
-    }
-    else if (selectedItem->checkState() == Qt::Unchecked && m_SelectedAddons.contains(selectedItem->text())) {
-        m_SelectedAddons.removeAt(m_SelectedAddons.indexOf(selectedItem->text()));
-    }
+    qDebug() << m_SelectedAddons;
 }
 
 void MainWindow::generateProject()
@@ -160,6 +173,15 @@ void MainWindow::generateProject()
     QFile folder(m_AppPath);
     if (folder.exists()) {
         QDesktopServices::openUrl(QUrl("file:///" + m_AppPath));
+    }
+
+    saveProjectToRecents();
+    fillRecentsMenu();
+    ui->statusBar->showMessage("Project generated", 5000);
+    ui->lineEditAppName->clear();
+    for (int i = 0; i < m_AddonItems.size(); i++) {
+        QListWidgetItem *item = m_AddonItems.at(i);
+        item->setCheckState(Qt::Unchecked);
     }
 }
 
@@ -194,12 +216,6 @@ void MainWindow::generateQMakeProject()
         }
     }
     priFile.close();
-    ui->statusBar->showMessage("Project generated", 5000);
-    ui->lineEditAppName->clear();
-    for (int i = 0; i < m_AddonItems.size(); i++) {
-        QListWidgetItem *item = m_AddonItems.at(i);
-        item->setCheckState(Qt::Unchecked);
-    }
 }
 
 void MainWindow::generateCMakeProject()
@@ -238,16 +254,16 @@ void MainWindow::generateCMakeProject()
         contents.replace("${PROJ_NAME}", ui->lineEditAppName->text());
         contents.replace("${OPENFRAMEWORKS_PATH}", m_OFPath);
         QFile newFile(m_AppPath + "/CMakeLists.txt");
-        if (newFile.open(QIODevice::WriteOnly)) {
+        if (newFile.exists() == false && newFile.open(QIODevice::WriteOnly)) {
             newFile.write(contents.toUtf8());
             newFile.close();
         }
     }
+
     file.close();
 
     insertAddonsCMake();
     ui->statusBar->showMessage("Project generated", 5000);
-    ui->lineEditAppName->clear();
     for (int i = 0; i < m_AddonItems.size(); i++) {
         QListWidgetItem *item = m_AddonItems.at(i);
         item->setCheckState(Qt::Unchecked);
@@ -294,6 +310,7 @@ void MainWindow::insertAddonsQMake(QString &priContent)
             dir.mkdir("addons");
             m_AddonsPath = m_AppPath + "addons/";
         }
+
         addonRootPath = m_AddonsPath;
         for (int i = 0; i < m_SelectedAddons.size(); i++) {
             const QString currentAddonName = m_SelectedAddons.at(i);
@@ -513,4 +530,93 @@ void MainWindow::copyOFTemplateFiles()
         QFile::copy(m_OFAppTemplatePath + "ofApp.cpp", m_AppPath + "ofApp.cpp");
         QFile::copy(m_OFAppTemplatePath + "ofApp.h", m_AppPath + "ofApp.h");
     }
+}
+
+void MainWindow::saveProjectToRecents()
+{
+    QSettings settings;
+
+    QJsonDocument doc = QJsonDocument::fromBinaryData(settings.value("recent").toByteArray());
+    QJsonArray array = doc.object()["projects"].toArray();
+    int existingIndex = -1;
+    for (int i = 0; i < array.size(); i++) {
+        const QJsonObject proj = array.at(i).toObject();
+        if (proj["app_path"].toString() == ui->lineEditAppPath->text()) {
+            existingIndex = i;
+            break;
+        }
+    }
+
+    QJsonObject obj;
+    obj["of_path"] = ui->lineEditOfPath->text();
+    obj["app_name"] = ui->lineEditAppName->text();
+    obj["app_path"] = ui->lineEditAppPath->text();
+    obj["selected_addons"] = QJsonArray::fromStringList(m_SelectedAddons);
+    obj["project_type"] = ui->radioButtonCmake->isChecked() ? "cmake" : "qmake";
+    obj["of_version"] = ui->comboBox->currentIndex();
+
+    if (existingIndex == -1) {
+        array.push_back(obj);
+    }
+    else {
+        array[existingIndex] = obj;
+    }
+
+    obj = doc.object();
+    obj["projects"] = array;
+    doc.setObject(obj);
+
+    settings.setValue("recent", doc.toBinaryData());
+}
+
+void MainWindow::fillRecentsMenu()
+{
+    QSettings settings;
+    const QJsonDocument doc = QJsonDocument::fromBinaryData(settings.value("recent").toByteArray());
+    const QJsonObject obj = doc.object();
+    m_RecentProjectArray = obj["projects"].toArray();
+    ui->menuRecent_Projects->clear();
+
+    for (int i = 0; i < m_RecentProjectArray.size(); i++) {
+        const QJsonObject proj = m_RecentProjectArray.at(i).toObject();
+        const QString title = proj["app_name"].toString() + ": " + proj["app_path"].toString();
+        ui->menuRecent_Projects->addAction(title);
+    }
+}
+
+QJsonObject MainWindow::getRecentProject(const QString &appPath)
+{
+    QJsonObject obj;
+    for (int i = 0; i < m_RecentProjectArray.size(); i++) {
+        const QJsonObject proj = m_RecentProjectArray.at(i).toObject();
+        if (proj["app_path"].toString() == appPath) {
+            obj = proj;
+            break;
+        }
+    }
+
+    return obj;
+}
+
+void MainWindow::recentProjectSelected(QAction *selected)
+{
+    QString apppath = selected->text();
+    const QJsonObject project = getRecentProject(apppath.right(apppath.length() - apppath.indexOf(":") - 2));
+
+    ui->lineEditAppName->setText(project["app_name"].toString());
+    ui->lineEditAppPath->setText(project["app_path"].toString());
+    ui->lineEditOfPath->setText(project["of_path"].toString());
+    ui->comboBox->setCurrentIndex(project["of_version"].toInt());
+    const bool isCmake = project["project_type"].toString() == "cmake";
+    if (isCmake) {
+        ui->radioButtonCmake->setChecked(true);
+        ui->radioButtonQmake->setChecked(false);
+    }
+    else {
+        ui->radioButtonCmake->setChecked(false);
+        ui->radioButtonQmake->setChecked(true);
+    }
+
+    m_SelectedAddons = project["selected_addons"].toVariant().toStringList();
+    updateSelectedAddons();
 }
