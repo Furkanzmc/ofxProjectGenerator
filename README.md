@@ -5,7 +5,7 @@ I plan to fix that soon. But you are so very welcome to send a PR. ;)
 
 You can read about how CMake projects work [here](http://zmc.space/2016/using-openFrameworks-v0.9-with-cmake/).
 
-![SS](http://i.imgur.com/H9lcIlN.jpg)
+![SS](https://drive.google.com/uc?export=download&id=0B2b4SnYRu-h_Q2UzdU11MDlYUVE)
 
 # TODO
 - [x] Enable copy addons to project folder
