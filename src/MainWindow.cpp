@@ -166,7 +166,7 @@ void MainWindow::generateProject()
 
     QFile folder(m_AppPath);
     if (folder.exists()) {
-        QDesktopServices::openUrl(QUrl("file:// /" + m_AppPath));
+        QDesktopServices::openUrl(QUrl("file:///" + m_AppPath));
     }
 
     saveProjectToRecents();
