@@ -1,6 +1,4 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
-
+#pragma once
 #include <QMainWindow>
 #include <QJsonArray>
 
@@ -8,7 +6,6 @@ namespace Ui
 {
 class MainWindow;
 }
-
 class QListWidgetItem;
 
 class MainWindow : public QMainWindow
@@ -21,12 +18,12 @@ public:
 
 private:
     Ui::MainWindow *ui;
-    QList<QListWidgetItem *> m_AddonItems;
     QString m_OFPath,
             m_OFAddonsPath,
             m_OFAppTemplatePath,
             m_AppPath,
-            m_AddonsPath/*addons folder in the app directory*/,
+            // addons folder in the app directory
+            m_AddonsPath,
             m_PriFile;
 
     bool m_IsAppNameValid,
@@ -39,14 +36,25 @@ private:
     QJsonArray m_RecentProjectArray;
 
 private slots:
-    void getAddonNames();
+    /**
+     * @brief Lists the addon names from the selected openFrameworks path
+     */
+    void listAddonNames();
     void checkAppNameValidity(const QString &str);
-    void checkAppFolderValidity(QString str);
+    void checkAppFolderValidity(const QString &str);
 
     void browseOFPath();
     void browseAppPath();
+    /**
+     * @brief If selectedItem equals to nullptr then m_SelectedAddons is used to determine which item in list widget should be checked.
+     * If selectedItem is not nullptr, then the item is used to update m_SelectedAddons
+     * @param selectedItem
+     */
     void updateSelectedAddons(QListWidgetItem *selectedItem = nullptr);
 
+    /**
+     * @brief Uses the selected options to determine the type of project to generate
+     */
     void generateProject();
     void generateQMakeProject();
     void generateCMakeProject();
@@ -58,7 +66,7 @@ private:
     void insertAddonsQMake(QString &priContent);
     void insertAddonsCMake();
 
-    bool copyRecursively(const QString &srcFilePath, const QString &tgtFilePath);
+    bool copyRecursively(const QString &srcFilePath, const QString &tgtFilePath) const;
     void copyOFTemplateFiles();
     void saveProjectToRecents();
 
@@ -66,5 +74,3 @@ private:
     QJsonObject getRecentProject(const QString &appPath);
     void recentProjectSelected(QAction *selected);
 };
-
-#endif // MAINWINDOW_H

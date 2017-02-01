@@ -28,17 +28,17 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     this->setWindowTitle("ofxProjectGenerator");
 
-    connect(ui->lineEditOfPath, SIGNAL(textChanged(QString)), this, SLOT(getAddonNames()));
-    connect(ui->lineEditAppName, SIGNAL(textChanged(QString)), this, SLOT(checkAppNameValidity(QString)));
-    connect(ui->lineEditAppPath, SIGNAL(textChanged(QString)), this, SLOT(checkAppFolderValidity(QString)));
-    connect(ui->listWidget, SIGNAL(itemClicked(QListWidgetItem *)), this, SLOT(updateSelectedAddons(QListWidgetItem *)));
+    connect(ui->listWidget, &QListWidget::itemClicked, this, &MainWindow::updateSelectedAddons);
+    connect(ui->lineEditOfPath, &QLineEdit::textChanged, this, &MainWindow::listAddonNames);
+    connect(ui->lineEditAppName, &QLineEdit::textChanged, this, &MainWindow::checkAppNameValidity);
+    connect(ui->lineEditAppPath, &QLineEdit::textChanged, this, &MainWindow::checkAppFolderValidity);
 
-    connect(ui->buttonOfPath, SIGNAL(pressed()), this, SLOT(browseOFPath()));
-    connect(ui->buttonAppPath, SIGNAL(pressed()), this, SLOT(browseAppPath()));
-    connect(ui->buttonGenerate, SIGNAL(pressed()), this, SLOT(generateProject()));
-    connect(ui->comboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(changeOfVersion(int)));
-
+    connect(ui->buttonOfPath, &QPushButton::pressed, this, &MainWindow::browseOFPath);
+    connect(ui->buttonAppPath, &QPushButton::pressed, this, &MainWindow::browseAppPath);
+    connect(ui->buttonGenerate, &QPushButton::pressed, this, &MainWindow::generateProject);
     connect(ui->menuRecent_Projects, &QMenu::triggered, this, &MainWindow::recentProjectSelected);
+
+    connect(ui->comboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(changeOfVersion(int)));
 
     QSettings settings;
     ui->lineEditOfPath->setText(settings.value("of_path").toString());
@@ -48,15 +48,10 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    for (int i = 0; i < m_AddonItems.size(); i++) {
-        delete m_AddonItems[i];
-    }
-
-    m_AddonItems.clear();
     delete ui;
 }
 
-void MainWindow::getAddonNames()
+void MainWindow::listAddonNames()
 {
     ui->listWidget->clear();
     m_OFPath = ui->lineEditOfPath->text() + "/";
@@ -75,15 +70,16 @@ void MainWindow::getAddonNames()
         settings.setValue("of_path", ui->lineEditOfPath->text());
         settings.sync();
     }
+
     while (dirIteratorTop.hasNext()) {
         dirIteratorTop.next();
         if (dirIteratorTop.fileName() == "." || dirIteratorTop.fileName() == "..") {
             continue;
         }
-        QListWidgetItem *wid = new QListWidgetItem(ui->listWidget);
-        wid->setText(dirIteratorTop.fileName());
-        wid->setCheckState(Qt::CheckState::Unchecked);
-        m_AddonItems.append(wid);
+
+        QListWidgetItem *item = new QListWidgetItem(ui->listWidget);
+        item->setText(dirIteratorTop.fileName());
+        item->setCheckState(Qt::CheckState::Unchecked);
     }
 }
 
@@ -99,14 +95,10 @@ void MainWindow::checkAppNameValidity(const QString &str)
     }
 }
 
-void MainWindow::checkAppFolderValidity(QString str)
+void MainWindow::checkAppFolderValidity(const QString &str)
 {
     QDir dir(str);
-    if (dir.exists() == false) {
-        ui->lineEditAppPath->setStyleSheet("color: red");
-        m_IsAppFolderValid = false;
-    }
-    else if (str.length() == 0) {
+    if (str.length() == 0 || dir.exists() == false) {
         ui->lineEditAppPath->setStyleSheet("color: red");
         m_IsAppFolderValid = false;
     }
@@ -146,8 +138,6 @@ void MainWindow::updateSelectedAddons(QListWidgetItem *selectedItem)
             m_SelectedAddons.removeAt(m_SelectedAddons.indexOf(selectedItem->text()));
         }
     }
-
-    qDebug() << m_SelectedAddons;
 }
 
 void MainWindow::generateProject()
@@ -158,29 +148,35 @@ void MainWindow::generateProject()
         return;
     }
 
-    if (ui->radioButtonCmake->isChecked()) {
-        if (m_OFVersion == 0) {
-            QMessageBox::information(this, "Sorry... :(", "Version 0.8.4 is not yet supported with Cmake.");
-            return;
-        }
+    // Put them in varriables in case we add new types of projects
+    const bool isCMakeProject = ui->radioButtonCmake->isChecked();
+    const bool isQMakeProject = ui->radioButtonQmake->isChecked();
+    if (isCMakeProject && m_OFVersion == 0) {
+        QMessageBox::information(this, "Sorry... :(", "Version 0.8.4 is not yet supported with Cmake.");
+        return;
+    }
 
+    copyOFTemplateFiles();
+    if (isCMakeProject) {
         generateCMakeProject();
     }
-    else if (ui->radioButtonQmake->isChecked()) {
+    else if (isQMakeProject) {
         generateQMakeProject();
     }
 
     QFile folder(m_AppPath);
     if (folder.exists()) {
-        QDesktopServices::openUrl(QUrl("file:///" + m_AppPath));
+        QDesktopServices::openUrl(QUrl("file:// /" + m_AppPath));
     }
 
     saveProjectToRecents();
     fillRecentsMenu();
+
+    // Clear the fields AFTER the project is saved to recents
     ui->statusBar->showMessage("Project generated", 5000);
     ui->lineEditAppName->clear();
-    for (int i = 0; i < m_AddonItems.size(); i++) {
-        QListWidgetItem *item = m_AddonItems.at(i);
+    for (int i = 0; i < ui->listWidget->count(); i++) {
+        QListWidgetItem *item = ui->listWidget->item(i);
         item->setCheckState(Qt::Unchecked);
     }
 }
@@ -188,8 +184,8 @@ void MainWindow::generateProject()
 void MainWindow::generateQMakeProject()
 {
     QFile priFile(m_PriFile);
-    copyOFTemplateFiles();
     QFile::copy("./data/proFileTemplate.pro", m_AppPath + ui->lineEditAppName->text() + ".pro");
+
     QFile proFile(m_AppPath + ui->lineEditAppName->text() + ".pro");
     if (proFile.exists() && proFile.open(QIODevice::ReadWrite)) {
         QString contents = QString(proFile.readAll());
@@ -202,19 +198,20 @@ void MainWindow::generateQMakeProject()
 
     if (priFile.exists() && priFile.open(QIODevice::ReadOnly)) {
         QString contents = QString(priFile.readAll());
-        //Insert OF path
+        // Insert OF path
         QString ofPathWithoutSuffix = m_OFPath;
         contents.replace("#OF_PATH#", "\"" + ofPathWithoutSuffix.remove(ofPathWithoutSuffix.length() - 1, 1) + "\"");
         contents.replace("#AR#", m_OFVersion == 1 ? "x64" : "Win32");
         insertAddonsQMake(contents);
 
-        //Write the changed pri file to the new path
+        // Write the changed pri file to the new path
         QFile newPriFile(m_AppPath + m_PriFile.right(m_PriFile.length() - m_PriFile.lastIndexOf("/")));
         if (newPriFile.open(QIODevice::WriteOnly)) {
             newPriFile.write(contents.toStdString().c_str());
             newPriFile.close();
         }
     }
+
     priFile.close();
 }
 
@@ -224,11 +221,17 @@ void MainWindow::generateCMakeProject()
     const QString findCmakeFile = "./data/findOpenFrameworks-v0.9.cmake";
     const QString ofCmakeFile = "./data/of_CMakeLists.txt";
 
-    copyOFTemplateFiles();
+    // Open projCmakeFile and change the OF_PATH and PROJ_NAME
+    QFile file(projCmakeFile);
+    if (file.exists() == false) {
+        QMessageBox::warning(this, "Error!", "./data/project_CMakeLists.txt file doesn't exist!");
+        return;
+    }
 
-    //These files don't require any change, so copy them as they are.
+    // These files don't require any change, so copy them as they are.
     QFile::copy(ofCmakeFile, m_OFPath + "/CMakeLists.txt");
-    QFile file(findCmakeFile);
+
+    file.setFileName(findCmakeFile);
     if (file.open(QIODevice::ReadOnly)) {
         QString contents = QString(file.readAll());
         contents.replace("${ARCHITECTURE}", m_OFVersion == 1 ? "x64" : "Win32");
@@ -238,16 +241,9 @@ void MainWindow::generateCMakeProject()
             newFile.close();
         }
     }
-    file.close();
-
-    //Open projCmakeFile and change the OF_PATH and PROJ_NAME
-    file.setFileName(projCmakeFile);
-    if (file.exists() == false) {
-        QMessageBox::warning(this, "Error!", "./data/project_CMakeLists.txt file doesn't exist!");
-        return;
-    }
 
     file.close();
+
     file.setFileName(projCmakeFile);
     if (file.open(QIODevice::ReadOnly)) {
         QString contents = QString(file.readAll());
@@ -263,11 +259,6 @@ void MainWindow::generateCMakeProject()
     file.close();
 
     insertAddonsCMake();
-    ui->statusBar->showMessage("Project generated", 5000);
-    for (int i = 0; i < m_AddonItems.size(); i++) {
-        QListWidgetItem *item = m_AddonItems.at(i);
-        item->setCheckState(Qt::Unchecked);
-    }
 }
 
 void MainWindow::changeOfVersion(int currentIndex)
@@ -287,12 +278,15 @@ QString MainWindow::getErrorString() const
     if (m_IsAppNameValid == false) {
         errStr += "* Type a valid app name";
     }
+
     if (m_IsAppFolderValid == false) {
         errStr += "\n* Type a valid app path";
     }
+
     if (m_IsOFPathValid == false) {
         errStr += "\n* Type a valid openFrameworks path";
     }
+
     return errStr;
 }
 
@@ -391,6 +385,7 @@ void MainWindow::insertAddonsCMake()
             dir.mkdir("addons");
             m_AddonsPath = m_AppPath + "addons/";
         }
+
         addonRootPath = m_AddonsPath;
         for (int i = 0; i < m_SelectedAddons.size(); i++) {
             const QString currentAddonName = m_SelectedAddons.at(i);
@@ -408,9 +403,11 @@ void MainWindow::insertAddonsCMake()
         const QString addonName = m_SelectedAddons.at(i);
         content += "#" + addonName + "\n";
         const QString addonPath = addonRootPath + addonName;
+
         QStringList folderList;
         folderList.append("/src");
         folderList.append("/libs");
+
         if (isCopyEnabled) {
             includePaths.append("addons/" + addonName + "/src");
             QDir libsDir(addonPath + "/libs");
@@ -455,7 +452,7 @@ void MainWindow::insertAddonsCMake()
             }
         }
 
-        //Add the paths to the content
+        // Add the paths to the content
         content += "list(APPEND ADDONS_SRC\n";
         for (const QString &src : sources) {
             content += src + "\n";
@@ -488,7 +485,7 @@ void MainWindow::insertAddonsCMake()
     }
 }
 
-bool MainWindow::copyRecursively(const QString &srcFilePath, const QString &tgtFilePath)
+bool MainWindow::copyRecursively(const QString &srcFilePath, const QString &tgtFilePath) const
 {
     QFileInfo srcFileInfo(srcFilePath);
     if (srcFileInfo.isDir()) {
@@ -496,6 +493,7 @@ bool MainWindow::copyRecursively(const QString &srcFilePath, const QString &tgtF
         if (targetDir.exists() == false) {
             targetDir.cdUp();
         }
+
         if (!targetDir.mkdir(srcFileInfo.fileName())) {
             return false;
         }
@@ -511,18 +509,17 @@ bool MainWindow::copyRecursively(const QString &srcFilePath, const QString &tgtF
             }
         }
     }
-    else {
-        if (!QFile::copy(srcFilePath, tgtFilePath)) {
-            return false;
-        }
+    else if (!QFile::copy(srcFilePath, tgtFilePath)) {
+        return false;
     }
+
     return true;
 }
 
 void MainWindow::copyOFTemplateFiles()
 {
     QDir dir(ui->lineEditAppPath->text() + "/");
-    //Create the project dir and copy the template
+    // Create the project dir and copy the template
     if (dir.exists()) {
         dir.mkdir(ui->lineEditAppName->text());
         m_AppPath = ui->lineEditAppPath->text() + "/" + ui->lineEditAppName->text() + "/";
