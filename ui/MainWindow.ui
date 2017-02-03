@@ -89,6 +89,13 @@
          </spacer>
         </item>
         <item>
+         <widget class="QRadioButton" name="radioButtonVS">
+          <property name="text">
+           <string>Visual Studio 2015</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QRadioButton" name="radioButtonCmake">
           <property name="text">
            <string>Cmake</string>

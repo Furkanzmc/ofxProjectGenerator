@@ -9,6 +9,7 @@
 #include <QListWidgetItem>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QUuid>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -51,12 +52,23 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::changeOfVersion(int currentIndex)
+{
+    m_OFVersion = currentIndex;
+    if (currentIndex == 0) {
+        m_PriFile = "./data/openFrameworks-0.8.4.pri";
+    }
+    else {
+        m_PriFile = "./data/openFrameworks-0.9.pri";
+    }
+}
+
 void MainWindow::listAddonNames()
 {
     ui->listWidget->clear();
     m_OFPath = ui->lineEditOfPath->text() + "/";
     m_OFAddonsPath = m_OFPath + "addons/";
-    m_OFAppTemplatePath = m_OFPath + "apps/myApps/emptyExample/src/";
+    m_OFAppTemplatePath = m_OFPath + "apps/myApps/emptyExample/";
 
     QDirIterator dirIteratorTop(m_OFAddonsPath, QDirIterator::NoIteratorFlags);
     if (dirIteratorTop.hasNext() == false) {
@@ -151,6 +163,7 @@ void MainWindow::generateProject()
     // Put them in varriables in case we add new types of projects
     const bool isCMakeProject = ui->radioButtonCmake->isChecked();
     const bool isQMakeProject = ui->radioButtonQmake->isChecked();
+    const bool isVSProject = ui->radioButtonVS->isChecked();
     if (isCMakeProject && m_OFVersion == 0) {
         QMessageBox::information(this, "Sorry... :(", "Version 0.8.4 is not yet supported with Cmake.");
         return;
@@ -162,6 +175,9 @@ void MainWindow::generateProject()
     }
     else if (isQMakeProject) {
         generateQMakeProject();
+    }
+    else if (isVSProject) {
+        generateVSProject();
     }
 
     QFile folder(m_AppPath);
@@ -261,15 +277,36 @@ void MainWindow::generateCMakeProject()
     insertAddonsCMake();
 }
 
-void MainWindow::changeOfVersion(int currentIndex)
+void MainWindow::generateVSProject()
 {
-    m_OFVersion = currentIndex;
-    if (currentIndex == 0) {
-        m_PriFile = "./data/openFrameworks-0.8.4.pri";
+    const QString appName = ui->lineEditAppName->text();
+    const QString slnFile = m_AppPath + appName + ".sln";
+    const QString vcxprojFile = m_AppPath + appName + ".vcxproj";
+
+    QFile file(slnFile);
+
+    if (file.open(QIODevice::ReadOnly)) {
+        QString contents = QString(file.readAll());
+        contents.replace("${OF_PATH}", m_OFPath);
+        contents.replace("mySketch", ui->lineEditAppName->text());
+        file.close();
+        file.open(QIODevice::WriteOnly);
+        file.write(contents.toUtf8());
+        file.close();
     }
-    else {
-        m_PriFile = "./data/openFrameworks-0.9.pri";
+
+    file.setFileName(vcxprojFile);
+    if (file.open(QIODevice::ReadOnly)) {
+        QString contents = QString(file.readAll());
+        contents.replace("${OF_PATH}", m_OFPath);
+        contents.replace("mySketch", ui->lineEditAppName->text());
+        file.close();
+        file.open(QIODevice::WriteOnly);
+        file.write(contents.toUtf8());
+        file.close();
     }
+
+    insertAddonsVS();
 }
 
 QString MainWindow::getErrorString() const
@@ -485,6 +522,260 @@ void MainWindow::insertAddonsCMake()
     }
 }
 
+void MainWindow::insertAddonsVS()
+{
+    QFile file;
+    const QString appName = ui->lineEditAppName->text();
+    const QString vcxprojFile = m_AppPath + appName + ".vcxproj";
+    const QString vcxprojFiltersFile = m_AppPath + appName + ".vcxproj.filters";
+
+    if (m_SelectedAddons.size() == 0) {
+        file.setFileName(vcxprojFile);
+        if (file.open(QIODevice::ReadOnly)) {
+            QString vcxprojFileContent = QString(file.readAll());
+            vcxprojFileContent.replace(";${ADDONS_INCLUDE}", "<!-- ;${ADDONS_INCLUDE} -->");
+            vcxprojFileContent.replace(";${ADDONS_LIBS}", "<!-- ;${ADDONS_LIBS} -->");
+            vcxprojFileContent.replace(";${ADDONS_LIBS_DIRECTORIES}", "<!-- ;${ADDONS_LIBS_DIRECTORIES} -->");
+            vcxprojFileContent.replace("${ADDONS_SRC}", "<!-- ;${ADDONS_SRC} -->");
+            vcxprojFileContent.replace("${ADDONS_HEADERS}", "<!-- ;${ADDONS_HEADERS} -->");
+            file.close();
+            file.open(QIODevice::WriteOnly);
+            file.write(vcxprojFileContent.toUtf8());
+            file.close();
+        }
+
+        file.setFileName(vcxprojFiltersFile);
+        if (file.open(QIODevice::ReadOnly)) {
+            QString vcxprojFileContent = QString(file.readAll());
+            vcxprojFileContent.replace("${ADDONS_FILTER_SRC}", "<!-- ${ADDONS_FILTER_SRC} -->");
+            vcxprojFileContent.replace("${ADDONS_FILTERS}", "<!-- ${ADDONS_FILTERS} -->");
+            vcxprojFileContent.replace("${ADDONS_FILTER_HEADERS}", "<!-- ${ADDONS_FILTER_HEADERS} -->");
+            file.close();
+            file.open(QIODevice::WriteOnly);
+            file.write(vcxprojFileContent.toUtf8());
+            file.close();
+        }
+
+        return;
+    }
+
+    bool isCopyEnabled = ui->checkBox->isChecked();
+    QString addonRootPath = m_OFAddonsPath;
+    if (isCopyEnabled) {
+        QDir dir(m_AppPath);
+        if (dir.exists()) {
+            dir.mkdir("addons");
+            m_AddonsPath = m_AppPath + "addons/";
+        }
+
+        addonRootPath = m_AddonsPath;
+        for (int i = 0; i < m_SelectedAddons.size(); i++) {
+            const QString currentAddonName = m_SelectedAddons.at(i);
+            const QString srcAddonPath = m_OFAddonsPath + currentAddonName;
+            QDir dir(m_AddonsPath);
+            dir.mkdir(currentAddonName);
+            copyRecursively(srcAddonPath + "/src", m_AddonsPath + currentAddonName);
+            copyRecursively(srcAddonPath + "/libs", m_AddonsPath + currentAddonName);
+        }
+    }
+
+    for (int i = 0; i < m_SelectedAddons.size(); i++) {
+        QList<std::pair<QString, QString>> sources, headers;
+        QList<std::pair<QString, QString>> libs;
+        QStringList includePaths;
+        const QString addonName = m_SelectedAddons.at(i);
+        const QString addonPath = addonRootPath + addonName;
+
+        QStringList folderList;
+        folderList.append("/src");
+        folderList.append("/libs");
+
+        if (isCopyEnabled) {
+            includePaths.append("addons/" + addonName + "/src");
+            QDir libsDir(addonPath + "/libs");
+            if (libsDir.exists()) {
+                includePaths.append("addons/" + addonName + "/libs");
+            }
+        }
+        else {
+            includePaths.append(addonPath + "/src");
+            QDir libsDir(addonPath + "/libs");
+            if (libsDir.exists()) {
+                includePaths.append(addonPath + "/libs");
+            }
+        }
+
+        for (const QString &folder : folderList) {
+            QDirIterator dirIt(addonPath + folder, QDirIterator::Subdirectories);
+            while (dirIt.hasNext()) {
+                dirIt.next();
+                if (dirIt.fileName() == "." || dirIt.fileName() == "..") {
+                    continue;
+                }
+
+                QString filePath = isCopyEnabled ? dirIt.filePath().replace(m_AddonsPath, "addons/") : dirIt.filePath();
+                if (dirIt.fileInfo().isDir()) {
+                    if (includePaths.contains(dirIt.fileInfo().absoluteDir().absolutePath()) == false) {
+                        includePaths.append(filePath);
+                    }
+
+                    continue;
+                }
+
+                if (dirIt.fileInfo().suffix() == "cpp") {
+                    sources.append(std::make_pair(addonName, filePath));
+                }
+                else if (dirIt.fileInfo().suffix() == "h") {
+                    headers.append(std::make_pair(addonName, filePath));
+                }
+                else if (dirIt.fileInfo().suffix() == "lib") {
+                    libs.append(std::make_pair(dirIt.fileName(), dirIt.path()));
+                }
+            }
+        }
+
+        // Add the paths to the content
+        QString addonsSrc, addonsFilterSrc, addonsFiltersHeaders;
+        for (auto &src : sources) {
+            addonsSrc += "<ClCompile Include=\"" + src.second.replace("/", "\\") + "\"/>\n";
+            addonsFilterSrc += "<ClCompile Include=\"" + src.second.replace("/", "\\") + "\"><Filter>addons\\" + src.first + "</Filter></ClCompile>";
+        }
+
+        file.setFileName(vcxprojFile);
+        if (file.open(QIODevice::ReadOnly)) {
+            QString vcxprojFileContent = QString(file.readAll());
+            if (vcxprojFileContent.indexOf("<!-- ;${ADDONS_SRC}") > 0) {
+                vcxprojFileContent.replace("<!-- ;${ADDONS_SRC} -->", addonsSrc);
+            }
+            else {
+                vcxprojFileContent.replace("${ADDONS_SRC}", addonsSrc);
+            }
+            file.close();
+            file.open(QIODevice::WriteOnly);
+            file.write(vcxprojFileContent.toUtf8());
+            file.close();
+        }
+
+        QString addonsHeaders;
+        for (auto &header : headers) {
+            addonsHeaders += "<ClCompile Include=\"" + header.second.replace("/", "\\") + "\"/>\n";
+            addonsFiltersHeaders += "<ClCompile Include=\"" + header.second.replace("/", "\\") + "\"><Filter>addons\\" + header.first + "</Filter></ClCompile>";
+        }
+
+        file.setFileName(vcxprojFile);
+        if (file.open(QIODevice::ReadOnly)) {
+            QString vcxprojFileContent = QString(file.readAll());
+            if (vcxprojFileContent.indexOf("<!-- ;${ADDONS_HEADERS}") > 0) {
+                vcxprojFileContent.replace("<!-- ;${ADDONS_HEADERS} -->", addonsHeaders);
+            }
+            else {
+                vcxprojFileContent.replace("${ADDONS_HEADERS}", addonsHeaders);
+            }
+
+            file.close();
+            file.open(QIODevice::WriteOnly);
+            file.write(vcxprojFileContent.toUtf8());
+            file.close();
+        }
+
+        // Add include path
+        QString addonsIncludePath;
+        for (QString &inc : includePaths) {
+            addonsIncludePath += inc.replace("/", "\\") + ";";
+        }
+
+        file.setFileName(vcxprojFile);
+        if (file.open(QIODevice::ReadOnly)) {
+            QString vcxprojFileContent = QString(file.readAll());
+            if (vcxprojFileContent.indexOf("<!-- ;${ADDONS_INCLUDE}") > 0) {
+                vcxprojFileContent.replace("<!-- ;${ADDONS_INCLUDE} -->", addonsIncludePath);
+            }
+            else {
+                vcxprojFileContent.replace("${ADDONS_INCLUDE}", addonsIncludePath);
+            }
+
+            file.close();
+            file.open(QIODevice::WriteOnly);
+            file.write(vcxprojFileContent.toUtf8());
+            file.close();
+        }
+
+        QString addonsLibs, addonsLibsDirectories;
+        for (auto &lib : libs) {
+            addonsLibs += lib.first + ";";
+            addonsLibsDirectories += lib.second.replace("/", "\\") + ";";
+        }
+
+        file.setFileName(vcxprojFile);
+        if (file.open(QIODevice::ReadOnly)) {
+            QString vcxprojFileContent = QString(file.readAll());
+            if (libs.size() == 0) {
+                addonsLibs = "";
+                addonsLibsDirectories = "";
+            }
+
+            if (vcxprojFileContent.indexOf("<!-- ;${ADDONS_LIBS}") > 0) {
+                vcxprojFileContent.replace("<!-- ;${ADDONS_LIBS} -->", addonsLibs);
+            }
+            else {
+                vcxprojFileContent.replace("${ADDONS_LIBS}", addonsLibs);
+            }
+
+            if (vcxprojFileContent.indexOf("<!-- ;${ADDONS_LIBS_DIRECTORIES}") > 0) {
+                vcxprojFileContent.replace("<!-- ;${ADDONS_LIBS_DIRECTORIES} -->", addonsLibsDirectories);
+            }
+            else {
+                vcxprojFileContent.replace("${ADDONS_LIBS_DIRECTORIES}", addonsLibsDirectories);
+            }
+            file.close();
+            file.open(QIODevice::WriteOnly);
+            file.write(vcxprojFileContent.toUtf8());
+            file.close();
+        }
+
+        // Add filters
+        QString addonsFilters;
+        for (const QString &name : m_SelectedAddons) {
+            QString filter = "<Filter Include=\"addons\\" + name + "\">\n";
+            const QString uuid = QUuid::createUuid().toString();
+            filter += "<UniqueIdentifier>" + uuid + "</UniqueIdentifier>\n";
+            filter += "</Filter>";
+
+            addonsFilters += filter + "\n";
+        }
+
+        file.setFileName(vcxprojFiltersFile);
+        if (file.open(QIODevice::ReadOnly)) {
+            QString vcxprojFileContent = QString(file.readAll());
+            if (vcxprojFileContent.indexOf("<!-- ${ADDONS_FILTERS}") > 0) {
+                vcxprojFileContent.replace("<!-- ${ADDONS_FILTERS} -->", addonsFilters);
+            }
+            else {
+                vcxprojFileContent.replace("${ADDONS_FILTERS}", addonsFilters);
+            }
+
+            if (vcxprojFileContent.indexOf("<!-- ${ADDONS_FILTER_HEADERS}") > 0) {
+                vcxprojFileContent.replace("<!-- ${ADDONS_FILTER_HEADERS} -->", addonsFiltersHeaders);
+            }
+            else {
+                vcxprojFileContent.replace("${ADDONS_FILTER_HEADERS}", addonsFiltersHeaders);
+            }
+
+            if (vcxprojFileContent.indexOf("<!-- ${ADDONS_FILTER_SRC}") > 0) {
+                vcxprojFileContent.replace("<!-- ${ADDONS_FILTER_SRC} -->", addonsFilterSrc);
+            }
+            else {
+                vcxprojFileContent.replace("${ADDONS_FILTER_SRC}", addonsFilterSrc);
+            }
+
+            file.close();
+            file.open(QIODevice::WriteOnly);
+            file.write(vcxprojFileContent.toUtf8());
+            file.close();
+        }
+    }
+}
+
 bool MainWindow::copyRecursively(const QString &srcFilePath, const QString &tgtFilePath) const
 {
     QFileInfo srcFileInfo(srcFilePath);
@@ -523,9 +814,30 @@ void MainWindow::copyOFTemplateFiles()
     if (dir.exists()) {
         dir.mkdir(ui->lineEditAppName->text());
         m_AppPath = ui->lineEditAppPath->text() + "/" + ui->lineEditAppName->text() + "/";
-        QFile::copy(m_OFAppTemplatePath + "main.cpp", m_AppPath + "main.cpp");
-        QFile::copy(m_OFAppTemplatePath + "ofApp.cpp", m_AppPath + "ofApp.cpp");
-        QFile::copy(m_OFAppTemplatePath + "ofApp.h", m_AppPath + "ofApp.h");
+        if (ui->radioButtonVS->isChecked()) {
+            dir.mkpath(m_AppPath + "src");
+            QFile::copy(m_OFAppTemplatePath + "src/main.cpp", m_AppPath + "src/main.cpp");
+            QFile::copy(m_OFAppTemplatePath + "src/ofApp.cpp", m_AppPath + "src/ofApp.cpp");
+            QFile::copy(m_OFAppTemplatePath + "src/ofApp.h", m_AppPath + "src/ofApp.h");
+
+            const QString slnFile = "./data/vs/mySketch.sln";
+            const QString vcxprojFile = "./data/vs/mySketch.vcxproj";
+            const QString vcxprojFiltersFile = "./data/vs/mySketch.vcxproj.filters";
+            const QString vcxprojUserFile = "./data/vs/mySketch.vcxproj.user";
+            const QString appName = ui->lineEditAppName->text();
+
+            QFile::copy(m_OFAppTemplatePath + "icon.rc", m_AppPath + "icon.rc");
+
+            QFile::copy(slnFile, m_AppPath + appName + ".sln");
+            QFile::copy(vcxprojFile, m_AppPath + appName + ".vcxproj");
+            QFile::copy(vcxprojFiltersFile, m_AppPath + appName + ".vcxproj.filters");
+            QFile::copy(vcxprojUserFile, m_AppPath + appName + ".vcxproj.user");
+        }
+        else {
+            QFile::copy(m_OFAppTemplatePath + "src/main.cpp", m_AppPath + "main.cpp");
+            QFile::copy(m_OFAppTemplatePath + "src/ofApp.cpp", m_AppPath + "ofApp.cpp");
+            QFile::copy(m_OFAppTemplatePath + "src/ofApp.h", m_AppPath + "ofApp.h");
+        }
     }
 }
 
@@ -549,7 +861,15 @@ void MainWindow::saveProjectToRecents()
     obj["app_name"] = ui->lineEditAppName->text();
     obj["app_path"] = ui->lineEditAppPath->text();
     obj["selected_addons"] = QJsonArray::fromStringList(m_SelectedAddons);
-    obj["project_type"] = ui->radioButtonCmake->isChecked() ? "cmake" : "qmake";
+    if (ui->radioButtonCmake->isChecked()) {
+        obj["project_type"] = "cmake";
+    }
+    else if (ui->radioButtonQmake->isChecked()) {
+        obj["project_type"] = "qmake";
+    }
+    else if (ui->radioButtonVS->isChecked()) {
+        obj["project_type"] = "vs2015";
+    }
     obj["of_version"] = ui->comboBox->currentIndex();
 
     if (existingIndex == -1) {
@@ -604,14 +924,21 @@ void MainWindow::recentProjectSelected(QAction *selected)
     ui->lineEditAppPath->setText(project["app_path"].toString());
     ui->lineEditOfPath->setText(project["of_path"].toString());
     ui->comboBox->setCurrentIndex(project["of_version"].toInt());
-    const bool isCmake = project["project_type"].toString() == "cmake";
-    if (isCmake) {
+
+    if (project["project_type"].toString() == "cmake") {
         ui->radioButtonCmake->setChecked(true);
         ui->radioButtonQmake->setChecked(false);
+        ui->radioButtonVS->setChecked(false);
     }
-    else {
+    else if (project["project_type"].toString() == "qmake") {
         ui->radioButtonCmake->setChecked(false);
         ui->radioButtonQmake->setChecked(true);
+        ui->radioButtonVS->setChecked(false);
+    }
+    else if (project["project_type"].toString() == "vs2015") {
+        ui->radioButtonCmake->setChecked(false);
+        ui->radioButtonQmake->setChecked(false);
+        ui->radioButtonVS->setChecked(true);
     }
 
     m_SelectedAddons = project["selected_addons"].toVariant().toStringList();

@@ -36,6 +36,9 @@ private:
     QJsonArray m_RecentProjectArray;
 
 private slots:
+    void changeOfVersion(int currentIndex);
+
+private:
     /**
      * @brief Lists the addon names from the selected openFrameworks path
      */
@@ -58,13 +61,12 @@ private slots:
     void generateProject();
     void generateQMakeProject();
     void generateCMakeProject();
+    void generateVSProject();
 
-    void changeOfVersion(int currentIndex);
-
-private:
     QString getErrorString() const;
     void insertAddonsQMake(QString &priContent);
     void insertAddonsCMake();
+    void insertAddonsVS();
 
     bool copyRecursively(const QString &srcFilePath, const QString &tgtFilePath) const;
     void copyOFTemplateFiles();
