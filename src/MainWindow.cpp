@@ -169,6 +169,11 @@ void MainWindow::generateProject()
         return;
     }
 
+    if (isVSProject && m_OFVersion == 0) {
+        QMessageBox::information(this, "Sorry... :(", "Version 0.8.4 is not yet supported with Visual Studio 2015.");
+        return;
+    }
+
     copyOFTemplateFiles();
     if (isCMakeProject) {
         generateCMakeProject();
