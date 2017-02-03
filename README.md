@@ -7,8 +7,9 @@ You can read about how CMake projects work [here](http://zmc.space/2016/using-op
 
 # Features
 
-- Generate CMake projects
-- Generate QMake projects
+- Generate CMake projects for openFrameworks v0.9.x
+- Generate QMake projects for openFrameworks v0.9.x and v0.8.x
+- Generate Visual Studio 2015 projects for openFrameworks v0.9.x
 - Multiple openFrameworks versions
 - Add addons to projects
 - Update the addons for an existing project
@@ -18,6 +19,6 @@ You can read about how CMake projects work [here](http://zmc.space/2016/using-op
 # TODO
 - [x] Enable copy addons to project folder
 - [x] Add support for [Cmake](http://www.cmake.org/) projects
-- [ ] Add support for VS 2012-2015 projects
+- [x] Add support for VS 2015 projects
 - [ ] Add support for [Code:Blocks](http://www.codeblocks.org/)
 - [ ] Add support for [CodeLite](http://codelite.org/)
